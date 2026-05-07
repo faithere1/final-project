@@ -1,3 +1,6 @@
-com/aclsim/MainApp.class
+com/aclsim/service/NetworkUtils.class
+com/aclsim/service/SimulatorService.class
 com/aclsim/model/Rule.class
+com/aclsim/model/Packet.class
+com/aclsim/MainApp.class
 com/aclsim/database/DatabaseManager.class
