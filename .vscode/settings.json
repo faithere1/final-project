@@ -4,5 +4,6 @@
     "java.project.referencedLibraries": [
         "lib/**/*.jar"
     ],
-    "maven.view": "flat"
+    "maven.view": "flat",
+    "java.configuration.updateBuildConfiguration": "interactive"
 }
