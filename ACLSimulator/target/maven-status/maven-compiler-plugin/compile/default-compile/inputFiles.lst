@@ -1,6 +1,7 @@
 /Users/fatih/Desktop/ceit_courses/211_java/final-project/ACLSimulator/src/main/java/com/aclsim/MainApp.java
+/Users/fatih/Desktop/ceit_courses/211_java/final-project/ACLSimulator/src/main/java/com/aclsim/MainController.java
 /Users/fatih/Desktop/ceit_courses/211_java/final-project/ACLSimulator/src/main/java/com/aclsim/database/DatabaseManager.java
-/Users/fatih/Desktop/ceit_courses/211_java/final-project/ACLSimulator/src/main/java/com/aclsim/database/model/Packet.java
-/Users/fatih/Desktop/ceit_courses/211_java/final-project/ACLSimulator/src/main/java/com/aclsim/database/model/Rule.java
+/Users/fatih/Desktop/ceit_courses/211_java/final-project/ACLSimulator/src/main/java/com/aclsim/model/Packet.java
+/Users/fatih/Desktop/ceit_courses/211_java/final-project/ACLSimulator/src/main/java/com/aclsim/model/Rule.java
 /Users/fatih/Desktop/ceit_courses/211_java/final-project/ACLSimulator/src/main/java/com/aclsim/service/NetworkUtils.java
 /Users/fatih/Desktop/ceit_courses/211_java/final-project/ACLSimulator/src/main/java/com/aclsim/service/SimulatorService.java

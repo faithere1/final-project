@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.geometry.Insets?>
+
+<BorderPane xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml"
+            fx:controller="com.aclsim.MainController" prefHeight="600.0" prefWidth="800.0">
+    
+    <top>
+        <VBox spacing="10">
+            <padding><Insets top="10" right="10" bottom="10" left="10"/></padding>
+            <Label text="ACL Simulator Dashboard" style="-fx-font-size: 20px; -fx-font-weight: bold;"/>
+            <HBox spacing="10">
+                <Button text="Add New Rule" fx:id="btnAddRule" />
+                <Button text="Delete Selected" fx:id="btnDeleteRule" onAction="#handleDeleteRule"/>
+            </HBox>
+        </VBox>
+    </top>
+
+    <center>
+        <TableView fx:id="ruleTable">
+            <columns>
+                <TableColumn fx:id="colPriority" text="Priority" prefWidth="70"/>
+                <TableColumn fx:id="colAction" text="Action" prefWidth="100"/>
+                <TableColumn fx:id="colProtocol" text="Protocol" prefWidth="100"/>
+                <TableColumn fx:id="colSource" text="Source IP" prefWidth="150"/>
+                <TableColumn fx:id="colDest" text="Dest IP" prefWidth="150"/>
+                <TableColumn fx:id="colPort" text="Port" prefWidth="80"/>
+            </columns>
+        </TableView>
+    </center>
+
+    <bottom>
+        <VBox spacing="10" style="-fx-background-color: #f4f4f4;">
+            <padding><Insets top="15" right="15" bottom="15" left="15"/></padding>
+            <Label text="Packet Simulator" style="-fx-font-weight: bold;"/>
+            <HBox spacing="10" alignment="CENTER_LEFT">
+                <TextField fx:id="txtSimSource" promptText="Source IP"/>
+                <TextField fx:id="txtSimDest" promptText="Dest IP"/>
+                <ComboBox fx:id="comboSimProtocol" promptText="Protocol"/>
+                <TextField fx:id="txtSimPort" promptText="Port" prefWidth="60"/>
+                <Button text="Run Simulation" fx:id="btnSimulate" onAction="#handleSimulate" 
+                        style="-fx-background-color: #2ecc71; -fx-text-fill: white;"/>
+            </HBox>
+            <Label fx:id="lblResult" text="Result: Waiting for input..." style="-fx-font-size: 14px;"/>
+        </VBox>
+    </bottom>
+</BorderPane>
