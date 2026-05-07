@@ -1,6 +1,9 @@
 com/aclsim/service/NetworkUtils.class
+com/aclsim/database/RuleDAO.class
 com/aclsim/model/Rule.class
 com/aclsim/model/Packet.class
+module-info.class
+com/aclsim/AddRuleController.class
 com/aclsim/service/SimulatorService.class
 com/aclsim/MainController.class
 com/aclsim/MainApp.class

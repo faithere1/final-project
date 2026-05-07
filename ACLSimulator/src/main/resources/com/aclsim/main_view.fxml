@@ -11,7 +11,7 @@
             <padding><Insets top="10" right="10" bottom="10" left="10"/></padding>
             <Label text="ACL Simulator Dashboard" style="-fx-font-size: 20px; -fx-font-weight: bold;"/>
             <HBox spacing="10">
-                <Button text="Add New Rule" fx:id="btnAddRule" />
+                <Button text="Add New Rule" fx:id="btnAddRule" onAction="#handleAddRule"/>
                 <Button text="Delete Selected" fx:id="btnDeleteRule" onAction="#handleDeleteRule"/>
             </HBox>
         </VBox>

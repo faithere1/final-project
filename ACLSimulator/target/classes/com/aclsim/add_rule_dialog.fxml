@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.geometry.Insets?>
+
+<VBox spacing="15" xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml"
+      fx:controller="com.aclsim.AddRuleController" prefWidth="350">
+    <padding><Insets top="20" right="20" bottom="20" left="20"/></padding>
+
+    <Label text="New ACL Rule" style="-fx-font-weight: bold; -fx-font-size: 18px;"/>
+
+    <GridPane hgap="10" vgap="10">
+        <Label text="Priority:" GridPane.rowIndex="0" GridPane.columnIndex="0"/>
+        <TextField fx:id="txtPriority" promptText="10, 20..." GridPane.rowIndex="0" GridPane.columnIndex="1"/>
+
+        <Label text="Action:" GridPane.rowIndex="1" GridPane.columnIndex="0"/>
+        <ComboBox fx:id="comboAction" maxWidth="Infinity" GridPane.rowIndex="1" GridPane.columnIndex="1"/>
+
+        <Label text="Protocol:" GridPane.rowIndex="2" GridPane.columnIndex="0"/>
+        <ComboBox fx:id="comboProtocol" maxWidth="Infinity" GridPane.rowIndex="2" GridPane.columnIndex="1"/>
+
+        <Label text="Source IP:" GridPane.rowIndex="3" GridPane.columnIndex="0"/>
+        <TextField fx:id="txtSourceIp" promptText="1.1.1.1 or ANY" GridPane.rowIndex="3" GridPane.columnIndex="1"/>
+
+        <Label text="Dest IP:" GridPane.rowIndex="4" GridPane.columnIndex="0"/>
+        <TextField fx:id="txtDestIp" promptText="2.2.2.2 or ANY" GridPane.rowIndex="4" GridPane.columnIndex="1"/>
+
+        <Label text="Port:" GridPane.rowIndex="5" GridPane.columnIndex="0"/>
+        <TextField fx:id="txtPort" promptText="-1 for any" GridPane.rowIndex="5" GridPane.columnIndex="1"/>
+    </GridPane>
+
+    <HBox spacing="10" alignment="CENTER_RIGHT">
+        <Button text="Cancel" onAction="#handleCancel"/>
+        <Button text="Save to Database" onAction="#handleSave" 
+                style="-fx-background-color: #3498db; -fx-text-fill: white;"/>
+    </HBox>
+</VBox>
