@@ -10,6 +10,7 @@ public class RuleDAO {
     // 1. Get all rules from the database
     public List<Rule> getAllRules() {
         List<Rule> rules = new ArrayList<>();
+        // We order by priority so the ACL logic engine processes them in the right sequence
         String sql = "SELECT * FROM rules ORDER BY priority ASC";
 
         try (Connection conn = DatabaseManager.getConnection();
@@ -28,17 +29,18 @@ public class RuleDAO {
                 ));
             }
         } catch (SQLException e) {
-            e.printStackTrace();
+            System.err.println("Database Error (getAllRules): " + e.getMessage());
         }
         return rules;
     }
 
     // 2. Add a new rule
     public void addRule(Rule rule) {
+        // FIXED: Using standard INSERT syntax
         String sql = "INSERT INTO rules (priority, action, protocol, source_ip, dest_ip, dest_port) VALUES (?,?,?,?,?,?)";
 
         try (Connection conn = DatabaseManager.getConnection();
-             PreparedStatement pstmt = conn.prepareCall(sql)) {
+             PreparedStatement pstmt = conn.prepareStatement(sql)) { // FIXED: Changed prepareCall to prepareStatement
             
             pstmt.setInt(1, rule.getPriority());
             pstmt.setString(2, rule.getAction());
@@ -48,8 +50,9 @@ public class RuleDAO {
             pstmt.setInt(6, rule.getDestPort());
             
             pstmt.executeUpdate();
+            System.out.println("LOG: Rule with priority " + rule.getPriority() + " saved to SQLite.");
         } catch (SQLException e) {
-            e.printStackTrace();
+            System.err.println("Database Error (addRule): " + e.getMessage());
         }
     }
 
@@ -61,9 +64,12 @@ public class RuleDAO {
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
             
             pstmt.setInt(1, id);
-            pstmt.executeUpdate();
+            int affectedRows = pstmt.executeUpdate();
+            if (affectedRows > 0) {
+                System.out.println("LOG: Rule ID " + id + " deleted from database.");
+            }
         } catch (SQLException e) {
-            e.printStackTrace();
+            System.err.println("Database Error (deleteRule): " + e.getMessage());
         }
     }
 }
