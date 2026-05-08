@@ -1,6 +1,8 @@
 package com.aclsim;
 
 import com.aclsim.model.Rule;
+import com.aclsim.service.NetworkUtils;
+
 import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
@@ -62,6 +64,13 @@ public class AddRuleController {
      */
     private boolean isInputValid() {
         String errorMessage = "";
+
+        if(!NetworkUtils.isValidIP(txtSourceIp.getText().trim())){
+            errorMessage += "Source IP format is invalid (use x.x.x.x or ANY)!\n";
+        }
+        if(!NetworkUtils.isValidIP(txtDestIp.getText().trim())){
+            errorMessage += "Destination IP format is invalid  (use x.x.x.x or ANY)!\n";
+        }
 
         // Check if numeric fields are actually numbers
         try {
