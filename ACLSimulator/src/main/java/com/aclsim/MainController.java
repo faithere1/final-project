@@ -103,15 +103,20 @@ public class MainController {
             if (match != null) {
                 lblResult.setText("RESULT: " + match.getAction() + " (Matched Rule #" + match.getPriority() + ")");
                 lblResult.setTextFill(match.getAction().equals("PERMIT") ? Color.GREEN : Color.RED);
+
+            // NEW: Highlight the row in the table
+                ruleTable.getSelectionModel().select(match);
+                ruleTable.scrollTo(match);
             } else {
                 lblResult.setText("RESULT: DENY (Implicit Deny)");
                 lblResult.setTextFill(Color.DARKRED);
+                ruleTable.getSelectionModel().clearSelection();
             }
         } catch (NumberFormatException e) {
             lblResult.setText("ERROR: Port must be a number");
             lblResult.setTextFill(Color.ORANGE);
         }
-    }
+}
 
     @FXML
     private void handleDeleteRule() {
