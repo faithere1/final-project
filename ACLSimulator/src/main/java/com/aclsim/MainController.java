@@ -98,20 +98,27 @@ public class MainController {
             Rule match = simulatorService.simulate(packet, ruleList);
 
             if (match != null) {
+                // Large Result Message
                 lblResult.setText("RESULT: " + match.getAction() + " (Matched Rule #" + match.getPriority() + ")");
-                lblResult.setTextFill(match.getAction().equals("PERMIT") ? Color.GREEN : Color.RED);
+                
+                // Color switching using vibrant high-contrast hex codes
+                if (match.getAction().equals("PERMIT")) {
+                    lblResult.setTextFill(Color.valueOf("#2ecc71")); // Neon Green
+                } else {
+                    lblResult.setTextFill(Color.valueOf("#ff7675")); // Bright Coral/Red
+                }
 
-                // HIGHLIGHTING: Select the row in the table and scroll to it
+                // Highlighting the row
                 ruleTable.getSelectionModel().select(match);
                 ruleTable.scrollTo(match);
             } else {
                 lblResult.setText("RESULT: DENY (Implicit Deny)");
-                lblResult.setTextFill(Color.DARKRED);
+                lblResult.setTextFill(Color.valueOf("#fab1a0")); // Light Salmon/Orange
                 ruleTable.getSelectionModel().clearSelection();
             }
         } catch (NumberFormatException e) {
             lblResult.setText("ERROR: Port must be a number");
-            lblResult.setTextFill(Color.ORANGE);
+            lblResult.setTextFill(Color.valueOf("#fdcb6e")); // Warning Yellow
         }
     }
 
@@ -126,21 +133,18 @@ public class MainController {
 
     @FXML
     private void handleClearAll() {
-        // Create a confirmation dialog
         Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
         alert.setTitle("Confirm Deletion");
         alert.setHeaderText("Clear All ACL Rules");
-        alert.setContentText("Are you sure you want to delete every rule in the database? This cannot be undone.");
+        alert.setContentText("Are you sure? This will delete everything in the database.");
 
         Optional<ButtonType> result = alert.showAndWait();
         if (result.isPresent() && result.get() == ButtonType.OK) {
-            // Loop through the current list and delete each from the DB
             for (Rule rule : ruleList) {
                 ruleDAO.deleteRule(rule.getId());
             }
-            // Refresh the UI
             loadRulesFromDatabase();
-            System.out.println(">>> Database cleared by user.");
+            System.out.println(">>> Database cleared.");
         }
     }
 }
