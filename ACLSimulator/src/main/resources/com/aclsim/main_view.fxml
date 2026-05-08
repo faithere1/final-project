@@ -4,45 +4,80 @@
 <?import javafx.geometry.Insets?>
 
 <BorderPane xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml"
-            fx:controller="com.aclsim.MainController" prefHeight="600.0" prefWidth="800.0">
+            fx:controller="com.aclsim.MainController" 
+            stylesheets="@style.css"
+            prefHeight="600.0" prefWidth="800.0">
     
     <top>
-        <VBox spacing="10">
-            <padding><Insets top="10" right="10" bottom="10" left="10"/></padding>
-            <Label text="ACL Simulator Dashboard" style="-fx-font-size: 20px; -fx-font-weight: bold;"/>
+        <VBox spacing="10" styleClass="header-section">
+            <padding><Insets top="15" right="15" bottom="15" left="15"/></padding>
+            <Label text="ACL Simulator Dashboard" style="-fx-font-size: 24px; -fx-font-weight: bold; -fx-text-fill: #2c3e50;"/>
             <HBox spacing="10">
-                <Button text="Add New Rule" fx:id="btnAddRule" onAction="#handleAddRule"/>
-                <Button text="Delete Selected" fx:id="btnDeleteRule" onAction="#handleDeleteRule"/>
+                <Button text="+ Add New Rule" fx:id="btnAddRule" onAction="#handleAddRule" 
+                        style="-fx-background-color: #3498db; -fx-text-fill: white;"/>
+                <Button text="Delete Selected" fx:id="btnDeleteRule" onAction="#handleDeleteRule"
+                        style="-fx-background-color: #e67e22; -fx-text-fill: white;"/>
+                <Region HBox.hgrow="ALWAYS" /> <!-- This pushes the next button to the right -->
+                <Button text="Clear All Rules" onAction="#handleClearAll"
+                        style="-fx-background-color: #c0392b; -fx-text-fill: white;"/>
             </HBox>
         </VBox>
     </top>
 
     <center>
-        <TableView fx:id="ruleTable">
-            <columns>
-                <TableColumn fx:id="colPriority" text="Priority" prefWidth="70"/>
-                <TableColumn fx:id="colAction" text="Action" prefWidth="100"/>
-                <TableColumn fx:id="colProtocol" text="Protocol" prefWidth="100"/>
-                <TableColumn fx:id="colSource" text="Source IP" prefWidth="150"/>
-                <TableColumn fx:id="colDest" text="Dest IP" prefWidth="150"/>
-                <TableColumn fx:id="colPort" text="Port" prefWidth="80"/>
-            </columns>
-        </TableView>
+        <StackPane>
+            <padding><Insets top="0" right="15" bottom="0" left="15"/></padding>
+            <TableView fx:id="ruleTable" VBox.vgrow="ALWAYS">
+                <columns>
+                    <TableColumn fx:id="colPriority" text="Priority" prefWidth="80"/>
+                    <TableColumn fx:id="colAction" text="Action" prefWidth="100"/>
+                    <TableColumn fx:id="colProtocol" text="Protocol" prefWidth="100"/>
+                    <TableColumn fx:id="colSource" text="Source IP" prefWidth="160"/>
+                    <TableColumn fx:id="colDest" text="Dest IP" prefWidth="160"/>
+                    <TableColumn fx:id="colPort" text="Port" prefWidth="80"/>
+                </columns>
+                <placeholder>
+                    <Label text="No ACL rules defined. Click 'Add New Rule' to start."/>
+                </placeholder>
+            </TableView>
+        </StackPane>
     </center>
 
     <bottom>
-        <VBox spacing="10" style="-fx-background-color: #f4f4f4;">
-            <padding><Insets top="15" right="15" bottom="15" left="15"/></padding>
-            <Label text="Packet Simulator" style="-fx-font-weight: bold;"/>
-            <HBox spacing="10" alignment="CENTER_LEFT">
-                <TextField fx:id="txtSimSource" promptText="Source IP"/>
-                <TextField fx:id="txtSimDest" promptText="Dest IP"/>
-                <ComboBox fx:id="comboSimProtocol" promptText="Protocol"/>
-                <TextField fx:id="txtSimPort" promptText="Port" prefWidth="60"/>
-                <Button text="Run Simulation" fx:id="btnSimulate" onAction="#handleSimulate" 
-                        style="-fx-background-color: #2ecc71; -fx-text-fill: white;"/>
+        <VBox spacing="15" style="-fx-background-color: #ecf0f1; -fx-border-color: #bdc3c7; -fx-border-width: 1 0 0 0;">
+            <padding><Insets top="20" right="20" bottom="20" left="20"/></padding>
+            <Label text="LIVE PACKET SIMULATOR" style="-fx-font-weight: bold; -fx-text-fill: #34495e; -fx-letter-spacing: 1px;"/>
+            
+            <HBox spacing="15" alignment="CENTER_LEFT">
+                <VBox spacing="5">
+                    <Label text="Source IP" style="-fx-font-size: 11px;"/>
+                    <TextField fx:id="txtSimSource" promptText="192.168.x.x"/>
+                </VBox>
+                <VBox spacing="5">
+                    <Label text="Destination IP" style="-fx-font-size: 11px;"/>
+                    <TextField fx:id="txtSimDest" promptText="10.0.x.x"/>
+                </VBox>
+                <VBox spacing="5">
+                    <Label text="Protocol" style="-fx-font-size: 11px;"/>
+                    <ComboBox fx:id="comboSimProtocol" prefWidth="100"/>
+                </VBox>
+                <VBox spacing="5">
+                    <Label text="Port" style="-fx-font-size: 11px;"/>
+                    <TextField fx:id="txtSimPort" promptText="80" prefWidth="60"/>
+                </VBox>
+                <VBox alignment="BOTTOM_CENTER">
+                    <Button text="RUN SIMULATION" fx:id="btnSimulate" onAction="#handleSimulate" 
+                            prefHeight="35" prefWidth="150"
+                            style="-fx-background-color: #27ae60; -fx-text-fill: white; -fx-font-weight: bold;"/>
+                </VBox>
             </HBox>
-            <Label fx:id="lblResult" text="Result: Waiting for input..." style="-fx-font-size: 14px;"/>
+            
+            <Separator />
+            
+            <HBox alignment="CENTER_LEFT" spacing="10">
+                <Label text="SIMULATION RESULT:" style="-fx-font-weight: bold;"/>
+                <Label fx:id="lblResult" text="Waiting for packet input..." style="-fx-font-size: 15px; -fx-font-family: 'Monospaced';"/>
+            </HBox>
         </VBox>
     </bottom>
 </BorderPane>

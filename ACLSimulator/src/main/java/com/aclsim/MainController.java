@@ -16,6 +16,7 @@ import javafx.scene.paint.Color;
 import javafx.stage.Stage;
 
 import java.io.IOException;
+import java.util.Optional;
 
 public class MainController {
     
@@ -50,7 +51,7 @@ public class MainController {
         comboSimProtocol.getSelectionModel().select("ANY");
         ruleTable.setItems(ruleList);
 
-        // 3. LOAD DATA FROM DATABASE (Phase 4)
+        // 3. Load initial data
         loadRulesFromDatabase();
     }
 
@@ -63,25 +64,21 @@ public class MainController {
     @FXML
     private void handleAddRule() {
         try {
-            // Load the Dialog FXML
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/aclsim/add_rule_dialog.fxml"));
             Parent root = loader.load();
             
-            // Create a new window (Stage) for the dialog
             Stage dialogStage = new Stage();
             dialogStage.setTitle("Add New ACL Rule");
             dialogStage.initOwner(ruleTable.getScene().getWindow());
             dialogStage.setScene(new Scene(root));
             
-            // Get the controller and show the window
             AddRuleController controller = loader.getController();
-            dialogStage.showAndWait(); // The code stops here until the user closes the dialog
+            dialogStage.showAndWait(); 
 
-            // If a rule was created, save it!
             Rule newRule = controller.getCreatedRule();
             if (newRule != null) {
-                ruleDAO.addRule(newRule); // Write to SQLite
-                loadRulesFromDatabase();  // Refresh Table
+                ruleDAO.addRule(newRule); 
+                loadRulesFromDatabase(); 
             }
         } catch (IOException e) {
             System.err.println("Error opening Add Rule dialog: " + e.getMessage());
@@ -104,7 +101,7 @@ public class MainController {
                 lblResult.setText("RESULT: " + match.getAction() + " (Matched Rule #" + match.getPriority() + ")");
                 lblResult.setTextFill(match.getAction().equals("PERMIT") ? Color.GREEN : Color.RED);
 
-            // NEW: Highlight the row in the table
+                // HIGHLIGHTING: Select the row in the table and scroll to it
                 ruleTable.getSelectionModel().select(match);
                 ruleTable.scrollTo(match);
             } else {
@@ -116,16 +113,34 @@ public class MainController {
             lblResult.setText("ERROR: Port must be a number");
             lblResult.setTextFill(Color.ORANGE);
         }
-}
+    }
 
     @FXML
     private void handleDeleteRule() {
         Rule selected = ruleTable.getSelectionModel().getSelectedItem();
         if (selected != null) {
-            // Delete from Database
             ruleDAO.deleteRule(selected.getId());
-            // Refresh the UI list
             loadRulesFromDatabase();
+        }
+    }
+
+    @FXML
+    private void handleClearAll() {
+        // Create a confirmation dialog
+        Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+        alert.setTitle("Confirm Deletion");
+        alert.setHeaderText("Clear All ACL Rules");
+        alert.setContentText("Are you sure you want to delete every rule in the database? This cannot be undone.");
+
+        Optional<ButtonType> result = alert.showAndWait();
+        if (result.isPresent() && result.get() == ButtonType.OK) {
+            // Loop through the current list and delete each from the DB
+            for (Rule rule : ruleList) {
+                ruleDAO.deleteRule(rule.getId());
+            }
+            // Refresh the UI
+            loadRulesFromDatabase();
+            System.out.println(">>> Database cleared by user.");
         }
     }
 }
