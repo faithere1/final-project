@@ -26,7 +26,7 @@ public class MainController {
     @FXML private TableColumn<Rule, String> colProtocol;
     @FXML private TableColumn<Rule, String> colSource;
     @FXML private TableColumn<Rule, String> colDest;
-    @FXML private TableColumn<Rule, String> colPort; // Updated to String for 2.1.2
+    @FXML private TableColumn<Rule, String> colPort;
 
     @FXML private TextField txtSimSource, txtSimDest, txtSimPort;
     @FXML private ComboBox<String> comboSimProtocol;
@@ -38,7 +38,7 @@ public class MainController {
 
     @FXML
     public void initialize() {
-        // 1. Link Table Columns
+        // Link Table Columns
         colPriority.setCellValueFactory(new PropertyValueFactory<>("priority"));
         colAction.setCellValueFactory(new PropertyValueFactory<>("action"));
         colProtocol.setCellValueFactory(new PropertyValueFactory<>("protocol"));
@@ -46,19 +46,17 @@ public class MainController {
         colDest.setCellValueFactory(new PropertyValueFactory<>("destIp"));
         colPort.setCellValueFactory(new PropertyValueFactory<>("destPort"));
 
-        // 2. Setup UI Components
+        // Setup UI Components
         comboSimProtocol.setItems(FXCollections.observableArrayList("TCP", "UDP", "ICMP", "ANY"));
         comboSimProtocol.getSelectionModel().select("ANY");
         ruleTable.setItems(ruleList);
 
-        // 3. Load initial data
         loadRulesFromDatabase();
     }
 
     private void loadRulesFromDatabase() {
         ruleList.clear();
         ruleList.addAll(ruleDAO.getAllRules());
-        System.out.println(">>> Rules loaded from database: " + ruleList.size());
     }
 
     @FXML
@@ -66,12 +64,10 @@ public class MainController {
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/aclsim/add_rule_dialog.fxml"));
             Parent root = loader.load();
-            
             Stage dialogStage = new Stage();
             dialogStage.setTitle("Add New ACL Rule");
             dialogStage.initOwner(ruleTable.getScene().getWindow());
             dialogStage.setScene(new Scene(root));
-            
             AddRuleController controller = loader.getController();
             dialogStage.showAndWait(); 
 
@@ -81,23 +77,16 @@ public class MainController {
                 loadRulesFromDatabase(); 
             }
         } catch (IOException e) {
-            System.err.println("Error opening Add Rule dialog: " + e.getMessage());
             e.printStackTrace();
         }
     }
 
-    /**
-     * NEW FOR 2.1.3: Handles the logic for editing an existing rule.
-     */
     @FXML
     private void handleEditRule() {
         Rule selected = ruleTable.getSelectionModel().getSelectedItem();
-        
         if (selected == null) {
             Alert alert = new Alert(Alert.AlertType.WARNING);
-            alert.setTitle("No Selection");
-            alert.setHeaderText("No Rule Selected");
-            alert.setContentText("Please select a rule in the table to edit.");
+            alert.setContentText("Please select a rule to edit.");
             alert.showAndWait();
             return;
         }
@@ -105,8 +94,6 @@ public class MainController {
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/aclsim/add_rule_dialog.fxml"));
             Parent root = loader.load();
-            
-            // Pass the selected rule to the dialog controller
             AddRuleController controller = loader.getController();
             controller.setRuleForEdit(selected);
 
@@ -116,38 +103,41 @@ public class MainController {
             stage.setScene(new Scene(root));
             stage.showAndWait();
 
-            // After dialog closes, check if we have an updated rule
             Rule updatedRule = controller.getCreatedRule();
             if (updatedRule != null) {
-                ruleDAO.updateRule(updatedRule); // Save changes to DB
-                loadRulesFromDatabase();        // Refresh table
+                ruleDAO.updateRule(updatedRule); 
+                loadRulesFromDatabase();
             }
         } catch (IOException e) {
-            System.err.println("Error opening Edit Rule dialog: " + e.getMessage());
             e.printStackTrace();
         }
     }
 
+    /**
+     * Updated for 2.1.5: 
+     * Correctly handles ICMP Type vs TCP/UDP Port input from the simulation panel.
+     */
     @FXML
     private void handleSimulate() {
         try {
             String src = txtSimSource.getText();
             String dest = txtSimDest.getText();
             String proto = comboSimProtocol.getValue();
-            int port = txtSimPort.getText().isEmpty() ? -1 : Integer.parseInt(txtSimPort.getText());
+            
+            // Get the numeric value from the simulation port box
+            int rawPortValue = txtSimPort.getText().isEmpty() ? -1 : Integer.parseInt(txtSimPort.getText());
 
-            Packet packet = new Packet(src, dest, proto, port);
+            // 2.1.5 Logic: Divert the value based on protocol
+            int destPort = proto.equalsIgnoreCase("ICMP") ? -1 : rawPortValue;
+            int icmpType = proto.equalsIgnoreCase("ICMP") ? rawPortValue : -1;
+
+            // Create packet with new icmpType field
+            Packet packet = new Packet(src, dest, proto, destPort, icmpType);
             Rule match = simulatorService.simulate(packet, ruleList);
 
             if (match != null) {
                 lblResult.setText("RESULT: " + match.getAction() + " (Matched Rule #" + match.getPriority() + ")");
-                
-                if (match.getAction().equals("PERMIT")) {
-                    lblResult.setTextFill(Color.valueOf("#2ecc71")); 
-                } else {
-                    lblResult.setTextFill(Color.valueOf("#ff7675")); 
-                }
-
+                lblResult.setTextFill(match.getAction().equals("PERMIT") ? Color.valueOf("#2ecc71") : Color.valueOf("#ff7675"));
                 ruleTable.getSelectionModel().select(match);
                 ruleTable.scrollTo(match);
             } else {
@@ -156,7 +146,7 @@ public class MainController {
                 ruleTable.getSelectionModel().clearSelection();
             }
         } catch (NumberFormatException e) {
-            lblResult.setText("ERROR: Port must be a number");
+            lblResult.setText("ERROR: Port/Type must be a number");
             lblResult.setTextFill(Color.valueOf("#fdcb6e")); 
         }
     }
@@ -176,14 +166,12 @@ public class MainController {
         alert.setTitle("Confirm Deletion");
         alert.setHeaderText("Clear All ACL Rules");
         alert.setContentText("Are you sure? This will delete everything in the database.");
-
         Optional<ButtonType> result = alert.showAndWait();
         if (result.isPresent() && result.get() == ButtonType.OK) {
             for (Rule rule : ruleList) {
                 ruleDAO.deleteRule(rule.getId());
             }
             loadRulesFromDatabase();
-            System.out.println(">>> Database cleared.");
         }
     }
 }

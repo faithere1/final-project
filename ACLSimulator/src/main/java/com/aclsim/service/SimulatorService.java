@@ -9,39 +9,43 @@ import java.util.List;
 public class SimulatorService {
 
     /**
-     * The core ACL logic: Find the FIRST rule that matches based on priority.
+     * Finds the first rule that matches based on priority.
      */
     public Rule simulate(Packet packet, List<Rule> rules) {
-        // 1. Create a copy and sort by priority (Sequence Number)
-        // In networking, rules with lower sequence numbers are evaluated first.
         List<Rule> sortedRules = new ArrayList<>(rules);
         sortedRules.sort(Comparator.comparingInt(Rule::getPriority));
 
-        // 2. Iterate through rules in order
         for (Rule rule : sortedRules) {
             if (isMatch(packet, rule)) {
-                return rule; // FIRST MATCH FOUND (Algorithm stops here)
+                return rule; 
             }
         }
-
-        // 3. No match found -> Implicit Deny
         return null;
     }
 
     /**
-     * Checks if a packet meets all the criteria of a specific rule.
+     * Updated for 2.1.5: 
+     * If the protocol is ICMP, the "Port" field in the rule is interpreted 
+     * as the ICMP Type (e.g., Type 8 for Echo Request).
      */
     private boolean isMatch(Packet packet, Rule rule) {
-        // Protocol and Port matching remain the same
+        // 1. IP and Protocol matching (supports CIDR and Wildcards from 2.1.1 & 2.1.4)
         boolean protocolMatch = NetworkUtils.matchValue(rule.getProtocol(), packet.getProtocol());
-        boolean portMatch     = NetworkUtils.matchPort(rule.getDestPort(), packet.getDestPort());
-        
-        // NEW FOR 2.1.1: Use bitwise range matching for IPs
-        // This handles both exact matches (1.1.1.1) and subnets (192.168.1.0/24)
         boolean sourceMatch   = NetworkUtils.isInRange(rule.getSourceIp(), packet.getSourceIp());
         boolean destMatch     = NetworkUtils.isInRange(rule.getDestIp(), packet.getDestIp());
 
+        // 2. Specialized Logic for 2.1.5 (ICMP Type vs TCP/UDP Port)
+        boolean portOrTypeMatch;
+        
+        if (rule.getProtocol().equalsIgnoreCase("ICMP")) {
+            // Check packet's ICMP Type against the rule's port field
+            portOrTypeMatch = NetworkUtils.matchPort(rule.getDestPort(), packet.getIcmpType());
+        } else {
+            // Check packet's Dest Port against the rule's port field (supports ranges from 2.1.2)
+            portOrTypeMatch = NetworkUtils.matchPort(rule.getDestPort(), packet.getDestPort());
+        }
+
         // All criteria must match (Logical AND)
-        return protocolMatch && sourceMatch && destMatch && portMatch;
+        return protocolMatch && sourceMatch && destMatch && portOrTypeMatch;
     }
 }

@@ -26,6 +26,15 @@ public class AddRuleController {
         // Set default selections
         comboAction.getSelectionModel().selectFirst(); // PERMIT
         comboProtocol.getSelectionModel().selectLast();  // ANY
+
+        // NEW FOR 2.1.5: Dynamic UI based on Protocol selection
+        comboProtocol.valueProperty().addListener((obs, oldVal, newVal) -> {
+            if ("ICMP".equals(newVal)) {
+                txtPort.setPromptText("ICMP Type (e.g., 8 for Ping)");
+            } else {
+                txtPort.setPromptText("Port or Range (e.g., 80-443)");
+            }
+        });
     }
 
     /**
@@ -73,7 +82,7 @@ public class AddRuleController {
     private boolean isInputValid() {
         String errorMessage = "";
 
-        // 1. Validate IP / Subnet (Updated for 2.1.1 and 2.1.4)
+        // 1. Validate IP / Subnet / Wildcard (2.1.1 & 2.1.4)
         if(!NetworkUtils.isValidIP(txtSourceIp.getText().trim())){
             errorMessage += "Source IP is invalid. Use: 1.1.1.1, 1.1.1.0/24, or 1.1.1.0 0.0.0.255!\n";
         }
@@ -88,10 +97,20 @@ public class AddRuleController {
             errorMessage += "Priority must be a whole number!\n";
         }
 
-        // 3. Validate Port/Range (Updated for 2.1.2)
+        // 3. Validate Port/Range or ICMP Type (Updated for 2.1.5)
         String portInput = txtPort.getText().trim();
-        if (!portInput.matches("^(\\d+)(-\\d+)?$") && !portInput.equalsIgnoreCase("ANY") && !portInput.equals("-1")) {
-            errorMessage += "Port must be a number, a range (e.g., 80-443), or ANY!\n";
+        String selectedProto = comboProtocol.getValue();
+
+        if ("ICMP".equals(selectedProto)) {
+            // ICMP only accepts a single type number or ANY
+            if (!portInput.matches("^\\d+$") && !portInput.equalsIgnoreCase("ANY") && !portInput.equals("-1")) {
+                errorMessage += "For ICMP, please enter a single Type number (e.g., 8) or ANY.\n";
+            }
+        } else {
+            // TCP/UDP/ANY accepts single ports or ranges (2.1.2)
+            if (!portInput.matches("^(\\d+)(-\\d+)?$") && !portInput.equalsIgnoreCase("ANY") && !portInput.equals("-1")) {
+                errorMessage += "Port must be a number, a range (e.g., 80-443), or ANY!\n";
+            }
         }
 
         if (errorMessage.isEmpty()) {
