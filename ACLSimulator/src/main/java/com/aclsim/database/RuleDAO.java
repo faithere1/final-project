@@ -7,10 +7,12 @@ import java.util.List;
 
 public class RuleDAO {
 
-    // 1. Get all rules from the database
+    /**
+     * 1. Get all rules from the database.
+     * Updated to read dest_port as a String (Supports 2.1.2 Port Ranges).
+     */
     public List<Rule> getAllRules() {
         List<Rule> rules = new ArrayList<>();
-        // We order by priority so the ACL logic engine processes them in the right sequence
         String sql = "SELECT * FROM rules ORDER BY priority ASC";
 
         try (Connection conn = DatabaseManager.getConnection();
@@ -25,7 +27,7 @@ public class RuleDAO {
                     rs.getString("protocol"),
                     rs.getString("source_ip"),
                     rs.getString("dest_ip"),
-                    rs.getInt("dest_port")
+                    rs.getString("dest_port") // Read as String
                 ));
             }
         } catch (SQLException e) {
@@ -34,20 +36,22 @@ public class RuleDAO {
         return rules;
     }
 
-    // 2. Add a new rule
+    /**
+     * 2. Add a new rule to the database.
+     * Updated to save dest_port as a String (Supports 2.1.2 Port Ranges).
+     */
     public void addRule(Rule rule) {
-        // FIXED: Using standard INSERT syntax
         String sql = "INSERT INTO rules (priority, action, protocol, source_ip, dest_ip, dest_port) VALUES (?,?,?,?,?,?)";
 
         try (Connection conn = DatabaseManager.getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(sql)) { // FIXED: Changed prepareCall to prepareStatement
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
             
             pstmt.setInt(1, rule.getPriority());
             pstmt.setString(2, rule.getAction());
             pstmt.setString(3, rule.getProtocol());
             pstmt.setString(4, rule.getSourceIp());
             pstmt.setString(5, rule.getDestIp());
-            pstmt.setInt(6, rule.getDestPort());
+            pstmt.setString(6, rule.getDestPort()); // FIXED: Changed setInt to setString
             
             pstmt.executeUpdate();
             System.out.println("LOG: Rule with priority " + rule.getPriority() + " saved to SQLite.");
@@ -56,7 +60,33 @@ public class RuleDAO {
         }
     }
 
-    // 3. Delete a rule by ID
+    /**
+     * 3. Update an existing rule (Required for 2.1.3 Editing).
+     */
+    public void updateRule(Rule rule) {
+        String sql = "UPDATE rules SET priority=?, action=?, protocol=?, source_ip=?, dest_ip=?, dest_port=? WHERE id=?";
+
+        try (Connection conn = DatabaseManager.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            
+            pstmt.setInt(1, rule.getPriority());
+            pstmt.setString(2, rule.getAction());
+            pstmt.setString(3, rule.getProtocol());
+            pstmt.setString(4, rule.getSourceIp());
+            pstmt.setString(5, rule.getDestIp());
+            pstmt.setString(6, rule.getDestPort());
+            pstmt.setInt(7, rule.getId()); // Use ID to find the record
+            
+            pstmt.executeUpdate();
+            System.out.println("LOG: Rule ID " + rule.getId() + " updated in database.");
+        } catch (SQLException e) {
+            System.err.println("Database Error (updateRule): " + e.getMessage());
+        }
+    }
+
+    /**
+     * 4. Delete a rule by ID.
+     */
     public void deleteRule(int id) {
         String sql = "DELETE FROM rules WHERE id = ?";
 

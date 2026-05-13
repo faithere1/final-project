@@ -2,7 +2,6 @@ package com.aclsim;
 
 import com.aclsim.model.Rule;
 import com.aclsim.service.NetworkUtils;
-
 import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
@@ -26,9 +25,6 @@ public class AddRuleController {
         comboProtocol.getSelectionModel().selectLast();  // ANY
     }
 
-    /**
-     * This method is called by MainController to get the result of the dialog.
-     */
     public Rule getCreatedRule() {
         return createdRule;
     }
@@ -36,15 +32,16 @@ public class AddRuleController {
     @FXML 
     private void handleSave() {
         if (isInputValid()) {
-            // Create the rule object from the validated input
+            // Create the rule object
+            // Port is now passed as a String to support 2.1.2 Port Ranges
             createdRule = new Rule(
-                0, // ID is assigned by the Database
+                0, 
                 Integer.parseInt(txtPriority.getText().trim()),
                 comboAction.getValue(),
                 comboProtocol.getValue(),
                 txtSourceIp.getText().trim(),
                 txtDestIp.getText().trim(),
-                Integer.parseInt(txtPort.getText().trim())
+                txtPort.getText().trim() 
             );
             
             saveClicked = true;
@@ -59,44 +56,34 @@ public class AddRuleController {
         closeWindow();
     }
 
-    /**
-     * Validates the user input. Shows an alert if something is wrong.
-     */
     private boolean isInputValid() {
         String errorMessage = "";
 
+        // 1. Validate IP / Subnet (Handles CIDR for 2.1.1)
         if(!NetworkUtils.isValidIP(txtSourceIp.getText().trim())){
-            errorMessage += "Source IP format is invalid (use x.x.x.x or ANY)!\n";
+            errorMessage += "Source IP/CIDR is invalid (e.g., 1.1.1.1 or 192.168.1.0/24)!\n";
         }
         if(!NetworkUtils.isValidIP(txtDestIp.getText().trim())){
-            errorMessage += "Destination IP format is invalid  (use x.x.x.x or ANY)!\n";
+            errorMessage += "Destination IP/CIDR is invalid!\n";
         }
 
-        // Check if numeric fields are actually numbers
+        // 2. Validate Priority (Must be a number)
         try {
             Integer.parseInt(txtPriority.getText().trim());
         } catch (NumberFormatException e) {
             errorMessage += "Priority must be a whole number!\n";
         }
 
-        try {
-            Integer.parseInt(txtPort.getText().trim());
-        } catch (NumberFormatException e) {
-            errorMessage += "Port must be a number (use -1 for ANY)!\n";
-        }
-
-        // Check if IPs are empty
-        if (txtSourceIp.getText() == null || txtSourceIp.getText().trim().isEmpty()) {
-            errorMessage += "Source IP cannot be empty!\n";
-        }
-        if (txtDestIp.getText() == null || txtDestIp.getText().trim().isEmpty()) {
-            errorMessage += "Destination IP cannot be empty!\n";
+        // 3. Validate Port/Range (New for 2.1.2)
+        String portInput = txtPort.getText().trim();
+        // This RegEx allows: digits (80), digits-digits (80-443), or "ANY"
+        if (!portInput.matches("^(\\d+)(-\\d+)?$") && !portInput.equalsIgnoreCase("ANY") && !portInput.equals("-1")) {
+            errorMessage += "Port must be a number, a range (e.g., 80-443), or ANY!\n";
         }
 
         if (errorMessage.isEmpty()) {
             return true;
         } else {
-            // Show the error message to the user
             Alert alert = new Alert(Alert.AlertType.ERROR);
             alert.initOwner(txtPriority.getScene().getWindow());
             alert.setTitle("Invalid Input");
