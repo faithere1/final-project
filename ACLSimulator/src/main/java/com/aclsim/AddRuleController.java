@@ -13,6 +13,9 @@ public class AddRuleController {
 
     private Rule createdRule = null;
     private boolean saveClicked = false;
+    
+    // NEW FOR 2.1.3: Tracks if we are editing an existing rule
+    private int currentRuleId = 0; 
 
     @FXML
     public void initialize() {
@@ -25,6 +28,20 @@ public class AddRuleController {
         comboProtocol.getSelectionModel().selectLast();  // ANY
     }
 
+    /**
+     * NEW FOR 2.1.3: Fills the dialog fields with data from an existing rule.
+     * This is called by MainController before showing the window.
+     */
+    public void setRuleForEdit(Rule rule) {
+        this.currentRuleId = rule.getId(); // Keep the original database ID
+        txtPriority.setText(String.valueOf(rule.getPriority()));
+        comboAction.setValue(rule.getAction());
+        comboProtocol.setValue(rule.getProtocol());
+        txtSourceIp.setText(rule.getSourceIp());
+        txtDestIp.setText(rule.getDestIp());
+        txtPort.setText(rule.getDestPort());
+    }
+
     public Rule getCreatedRule() {
         return createdRule;
     }
@@ -33,9 +50,9 @@ public class AddRuleController {
     private void handleSave() {
         if (isInputValid()) {
             // Create the rule object
-            // Port is now passed as a String to support 2.1.2 Port Ranges
+            // currentRuleId will be 0 for new rules, or the real ID for edited rules
             createdRule = new Rule(
-                0, 
+                currentRuleId, 
                 Integer.parseInt(txtPriority.getText().trim()),
                 comboAction.getValue(),
                 comboProtocol.getValue(),
@@ -59,7 +76,7 @@ public class AddRuleController {
     private boolean isInputValid() {
         String errorMessage = "";
 
-        // 1. Validate IP / Subnet (Handles CIDR for 2.1.1)
+        // 1. Validate IP / Subnet (CIDR support)
         if(!NetworkUtils.isValidIP(txtSourceIp.getText().trim())){
             errorMessage += "Source IP/CIDR is invalid (e.g., 1.1.1.1 or 192.168.1.0/24)!\n";
         }
@@ -67,16 +84,15 @@ public class AddRuleController {
             errorMessage += "Destination IP/CIDR is invalid!\n";
         }
 
-        // 2. Validate Priority (Must be a number)
+        // 2. Validate Priority
         try {
             Integer.parseInt(txtPriority.getText().trim());
         } catch (NumberFormatException e) {
             errorMessage += "Priority must be a whole number!\n";
         }
 
-        // 3. Validate Port/Range (New for 2.1.2)
+        // 3. Validate Port/Range
         String portInput = txtPort.getText().trim();
-        // This RegEx allows: digits (80), digits-digits (80-443), or "ANY"
         if (!portInput.matches("^(\\d+)(-\\d+)?$") && !portInput.equalsIgnoreCase("ANY") && !portInput.equals("-1")) {
             errorMessage += "Port must be a number, a range (e.g., 80-443), or ANY!\n";
         }

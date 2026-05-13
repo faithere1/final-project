@@ -26,7 +26,7 @@ public class MainController {
     @FXML private TableColumn<Rule, String> colProtocol;
     @FXML private TableColumn<Rule, String> colSource;
     @FXML private TableColumn<Rule, String> colDest;
-    @FXML private TableColumn<Rule, Integer> colPort;
+    @FXML private TableColumn<Rule, String> colPort; // Updated to String for 2.1.2
 
     @FXML private TextField txtSimSource, txtSimDest, txtSimPort;
     @FXML private ComboBox<String> comboSimProtocol;
@@ -86,6 +86,48 @@ public class MainController {
         }
     }
 
+    /**
+     * NEW FOR 2.1.3: Handles the logic for editing an existing rule.
+     */
+    @FXML
+    private void handleEditRule() {
+        Rule selected = ruleTable.getSelectionModel().getSelectedItem();
+        
+        if (selected == null) {
+            Alert alert = new Alert(Alert.AlertType.WARNING);
+            alert.setTitle("No Selection");
+            alert.setHeaderText("No Rule Selected");
+            alert.setContentText("Please select a rule in the table to edit.");
+            alert.showAndWait();
+            return;
+        }
+
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/aclsim/add_rule_dialog.fxml"));
+            Parent root = loader.load();
+            
+            // Pass the selected rule to the dialog controller
+            AddRuleController controller = loader.getController();
+            controller.setRuleForEdit(selected);
+
+            Stage stage = new Stage();
+            stage.setTitle("Edit ACL Rule");
+            stage.initOwner(ruleTable.getScene().getWindow());
+            stage.setScene(new Scene(root));
+            stage.showAndWait();
+
+            // After dialog closes, check if we have an updated rule
+            Rule updatedRule = controller.getCreatedRule();
+            if (updatedRule != null) {
+                ruleDAO.updateRule(updatedRule); // Save changes to DB
+                loadRulesFromDatabase();        // Refresh table
+            }
+        } catch (IOException e) {
+            System.err.println("Error opening Edit Rule dialog: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
     @FXML
     private void handleSimulate() {
         try {
@@ -98,27 +140,24 @@ public class MainController {
             Rule match = simulatorService.simulate(packet, ruleList);
 
             if (match != null) {
-                // Large Result Message
                 lblResult.setText("RESULT: " + match.getAction() + " (Matched Rule #" + match.getPriority() + ")");
                 
-                // Color switching using vibrant high-contrast hex codes
                 if (match.getAction().equals("PERMIT")) {
-                    lblResult.setTextFill(Color.valueOf("#2ecc71")); // Neon Green
+                    lblResult.setTextFill(Color.valueOf("#2ecc71")); 
                 } else {
-                    lblResult.setTextFill(Color.valueOf("#ff7675")); // Bright Coral/Red
+                    lblResult.setTextFill(Color.valueOf("#ff7675")); 
                 }
 
-                // Highlighting the row
                 ruleTable.getSelectionModel().select(match);
                 ruleTable.scrollTo(match);
             } else {
                 lblResult.setText("RESULT: DENY (Implicit Deny)");
-                lblResult.setTextFill(Color.valueOf("#fab1a0")); // Light Salmon/Orange
+                lblResult.setTextFill(Color.valueOf("#fab1a0")); 
                 ruleTable.getSelectionModel().clearSelection();
             }
         } catch (NumberFormatException e) {
             lblResult.setText("ERROR: Port must be a number");
-            lblResult.setTextFill(Color.valueOf("#fdcb6e")); // Warning Yellow
+            lblResult.setTextFill(Color.valueOf("#fdcb6e")); 
         }
     }
 
