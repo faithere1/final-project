@@ -4,6 +4,8 @@ import com.aclsim.database.RuleDAO;
 import com.aclsim.model.Packet;
 import com.aclsim.model.Rule;
 import com.aclsim.service.SimulatorService;
+import javafx.animation.*;
+import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
@@ -12,8 +14,12 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
+import javafx.scene.shape.*;
+import javafx.scene.text.Text;
 import javafx.stage.Stage;
+import javafx.util.Duration;
 
 import java.io.IOException;
 import java.util.Optional;
@@ -32,13 +38,17 @@ public class MainController {
     @FXML private ComboBox<String> comboSimProtocol;
     @FXML private Label lblResult;
 
+    // NEW FOR 2.2: Visualization components
+    @FXML private Pane topoPane;
+    private Circle packetNode;
+
     private ObservableList<Rule> ruleList = FXCollections.observableArrayList();
     private SimulatorService simulatorService = new SimulatorService();
     private RuleDAO ruleDAO = new RuleDAO();
 
     @FXML
     public void initialize() {
-        // Link Table Columns
+        // 1. Link Table Columns
         colPriority.setCellValueFactory(new PropertyValueFactory<>("priority"));
         colAction.setCellValueFactory(new PropertyValueFactory<>("action"));
         colProtocol.setCellValueFactory(new PropertyValueFactory<>("protocol"));
@@ -46,12 +56,96 @@ public class MainController {
         colDest.setCellValueFactory(new PropertyValueFactory<>("destIp"));
         colPort.setCellValueFactory(new PropertyValueFactory<>("destPort"));
 
-        // Setup UI Components
+        // 2. Setup UI Components
         comboSimProtocol.setItems(FXCollections.observableArrayList("TCP", "UDP", "ICMP", "ANY"));
         comboSimProtocol.getSelectionModel().select("ANY");
         ruleTable.setItems(ruleList);
 
+        // 3. Draw Topology (After layout is calculated)
+        Platform.runLater(this::drawTopology);
+
         loadRulesFromDatabase();
+    }
+
+    /**
+     * 2.2.1: Draws the Source, Router, and Destination visually
+     */
+    private void drawTopology() {
+        topoPane.getChildren().clear();
+        double width = topoPane.getWidth();
+        double height = topoPane.getHeight();
+        double centerY = height / 2 - 10;
+
+        // Draw the connecting "cable"
+        Line cable = new Line(100, centerY, width - 100, centerY);
+        cable.setStroke(Color.LIGHTGRAY);
+        cable.setStrokeWidth(4);
+        cable.getStrokeDashArray().addAll(10d, 10d);
+        topoPane.getChildren().add(cable);
+
+        // Draw Devices
+        drawDevice(100, centerY, "SOURCE PC", Color.web("#3498db"));
+        drawDevice(width / 2, centerY, "ROUTER", Color.web("#34495e"));
+        drawDevice(width - 100, centerY, "DEST SERVER", Color.web("#2ecc71"));
+
+        // Prepare the animated packet node (initially hidden)
+        packetNode = new Circle(10, Color.YELLOW);
+        packetNode.setStroke(Color.BLACK);
+        packetNode.setVisible(false);
+        topoPane.getChildren().add(packetNode);
+    }
+
+    private void drawDevice(double x, double y, String name, Color color) {
+        Circle circle = new Circle(x, y, 25, color);
+        circle.setStroke(Color.DARKSLATEGRAY);
+        circle.setStrokeWidth(2);
+        
+        Text text = new Text(name);
+        text.setX(x - 35);
+        text.setY(y + 45);
+        text.setStyle("-fx-font-weight: bold; -fx-font-size: 11px; -fx-fill: #2c3e50;");
+        
+        topoPane.getChildren().addAll(circle, text);
+    }
+
+    /**
+     * 2.2.2: Animates the packet movement based on Permit/Deny
+     */
+    private void animatePacket(boolean isPermitted) {
+        double startX = 100;
+        double routerX = topoPane.getWidth() / 2;
+        double endX = topoPane.getWidth() - 100;
+        double centerY = topoPane.getHeight() / 2 - 10;
+
+        // Reset
+        packetNode.setTranslateX(0);
+        packetNode.setCenterX(startX);
+        packetNode.setCenterY(centerY);
+        packetNode.setFill(isPermitted ? Color.web("#2ecc71") : Color.web("#ff7675"));
+        packetNode.setOpacity(1.0);
+        packetNode.setVisible(true);
+
+        // Move to Router
+        TranslateTransition toRouter = new TranslateTransition(Duration.seconds(1.2), packetNode);
+        toRouter.setToX(routerX - startX);
+
+        if (isPermitted) {
+            // Continue to Destination
+            TranslateTransition toDest = new TranslateTransition(Duration.seconds(1.2), packetNode);
+            toDest.setToX(endX - startX);
+            SequentialTransition seq = new SequentialTransition(toRouter, toDest);
+            seq.play();
+        } else {
+            // Shake and vanish at Router
+            toRouter.setOnFinished(e -> {
+                TranslateTransition shake = new TranslateTransition(Duration.seconds(0.1), packetNode);
+                shake.setByX(5); shake.setAutoReverse(true); shake.setCycleCount(4);
+                FadeTransition fade = new FadeTransition(Duration.seconds(0.5), packetNode);
+                fade.setToValue(0);
+                new SequentialTransition(shake, fade).play();
+            });
+            toRouter.play();
+        }
     }
 
     private void loadRulesFromDatabase() {
@@ -64,90 +158,72 @@ public class MainController {
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/aclsim/add_rule_dialog.fxml"));
             Parent root = loader.load();
-            Stage dialogStage = new Stage();
-            dialogStage.setTitle("Add New ACL Rule");
-            dialogStage.initOwner(ruleTable.getScene().getWindow());
-            dialogStage.setScene(new Scene(root));
+            Stage stage = new Stage();
+            stage.setTitle("Add New Rule");
+            stage.initOwner(ruleTable.getScene().getWindow());
+            stage.setScene(new Scene(root));
             AddRuleController controller = loader.getController();
-            dialogStage.showAndWait(); 
-
-            Rule newRule = controller.getCreatedRule();
-            if (newRule != null) {
-                ruleDAO.addRule(newRule); 
-                loadRulesFromDatabase(); 
+            stage.showAndWait();
+            if (controller.getCreatedRule() != null) {
+                ruleDAO.addRule(controller.getCreatedRule());
+                loadRulesFromDatabase();
             }
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        } catch (IOException e) { e.printStackTrace(); }
     }
 
     @FXML
     private void handleEditRule() {
         Rule selected = ruleTable.getSelectionModel().getSelectedItem();
-        if (selected == null) {
-            Alert alert = new Alert(Alert.AlertType.WARNING);
-            alert.setContentText("Please select a rule to edit.");
-            alert.showAndWait();
-            return;
-        }
-
+        if (selected == null) return;
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/aclsim/add_rule_dialog.fxml"));
             Parent root = loader.load();
             AddRuleController controller = loader.getController();
             controller.setRuleForEdit(selected);
-
             Stage stage = new Stage();
-            stage.setTitle("Edit ACL Rule");
-            stage.initOwner(ruleTable.getScene().getWindow());
+            stage.setTitle("Edit Rule");
             stage.setScene(new Scene(root));
             stage.showAndWait();
-
-            Rule updatedRule = controller.getCreatedRule();
-            if (updatedRule != null) {
-                ruleDAO.updateRule(updatedRule); 
+            if (controller.getCreatedRule() != null) {
+                ruleDAO.updateRule(controller.getCreatedRule());
                 loadRulesFromDatabase();
             }
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        } catch (IOException e) { e.printStackTrace(); }
     }
 
-    /**
-     * Updated for 2.1.5: 
-     * Correctly handles ICMP Type vs TCP/UDP Port input from the simulation panel.
-     */
     @FXML
     private void handleSimulate() {
         try {
             String src = txtSimSource.getText();
             String dest = txtSimDest.getText();
             String proto = comboSimProtocol.getValue();
-            
-            // Get the numeric value from the simulation port box
-            int rawPortValue = txtSimPort.getText().isEmpty() ? -1 : Integer.parseInt(txtSimPort.getText());
+            int val = txtSimPort.getText().isEmpty() ? -1 : Integer.parseInt(txtSimPort.getText());
 
-            // 2.1.5 Logic: Divert the value based on protocol
-            int destPort = proto.equalsIgnoreCase("ICMP") ? -1 : rawPortValue;
-            int icmpType = proto.equalsIgnoreCase("ICMP") ? rawPortValue : -1;
+            int destPort = proto.equalsIgnoreCase("ICMP") ? -1 : val;
+            int icmpType = proto.equalsIgnoreCase("ICMP") ? val : -1;
 
-            // Create packet with new icmpType field
             Packet packet = new Packet(src, dest, proto, destPort, icmpType);
             Rule match = simulatorService.simulate(packet, ruleList);
 
+            boolean permitted = (match != null && match.getAction().equals("PERMIT"));
+
             if (match != null) {
-                lblResult.setText("RESULT: " + match.getAction() + " (Matched Rule #" + match.getPriority() + ")");
-                lblResult.setTextFill(match.getAction().equals("PERMIT") ? Color.valueOf("#2ecc71") : Color.valueOf("#ff7675"));
+                lblResult.setText("RESULT: " + match.getAction() + " (Rule #" + match.getPriority() + ")");
+                lblResult.setTextFill(permitted ? Color.valueOf("#2ecc71") : Color.valueOf("#ff7675"));
                 ruleTable.getSelectionModel().select(match);
                 ruleTable.scrollTo(match);
             } else {
                 lblResult.setText("RESULT: DENY (Implicit Deny)");
-                lblResult.setTextFill(Color.valueOf("#fab1a0")); 
+                lblResult.setTextFill(Color.valueOf("#fab1a0"));
                 ruleTable.getSelectionModel().clearSelection();
             }
+
+            // TRIGGER ANIMATION
+            animatePacket(permitted);
+
         } catch (NumberFormatException e) {
             lblResult.setText("ERROR: Port/Type must be a number");
-            lblResult.setTextFill(Color.valueOf("#fdcb6e")); 
+            lblResult.setTextFill(Color.valueOf("#fdcb6e"));
         }
     }
 
@@ -163,14 +239,10 @@ public class MainController {
     @FXML
     private void handleClearAll() {
         Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
-        alert.setTitle("Confirm Deletion");
-        alert.setHeaderText("Clear All ACL Rules");
-        alert.setContentText("Are you sure? This will delete everything in the database.");
+        alert.setContentText("Delete all rules?");
         Optional<ButtonType> result = alert.showAndWait();
         if (result.isPresent() && result.get() == ButtonType.OK) {
-            for (Rule rule : ruleList) {
-                ruleDAO.deleteRule(rule.getId());
-            }
+            for (Rule r : ruleList) ruleDAO.deleteRule(r.getId());
             loadRulesFromDatabase();
         }
     }

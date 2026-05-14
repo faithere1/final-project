@@ -6,7 +6,7 @@
 <BorderPane xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml"
             fx:controller="com.aclsim.MainController" 
             stylesheets="@style.css"
-            prefHeight="600.0" prefWidth="800.0">
+            prefHeight="750.0" prefWidth="900.0"> <!-- Slightly taller to accommodate visuals -->
     
     <top>
         <VBox spacing="10" styleClass="header-section">
@@ -16,14 +16,13 @@
                 <Button text="+ Add New Rule" fx:id="btnAddRule" onAction="#handleAddRule" 
                         style="-fx-background-color: #3498db; -fx-text-fill: white;"/>
                 
-                <!-- NEW FOR 2.1.3: Edit Button -->
                 <Button text="Edit Selected" onAction="#handleEditRule" 
                         style="-fx-background-color: #f1c40f; -fx-text-fill: white;"/>
                 
                 <Button text="Delete Selected" fx:id="btnDeleteRule" onAction="#handleDeleteRule"
                         style="-fx-background-color: #e67e22; -fx-text-fill: white;"/>
                 
-                <Region HBox.hgrow="ALWAYS" /> <!-- Pushes Clear All to the right -->
+                <Region HBox.hgrow="ALWAYS" /> 
                 
                 <Button text="Clear All Rules" onAction="#handleClearAll"
                         style="-fx-background-color: #c0392b; -fx-text-fill: white;"/>
@@ -32,22 +31,30 @@
     </top>
 
     <center>
-        <StackPane>
-            <padding><Insets top="0" right="15" bottom="0" left="15"/></padding>
-            <TableView fx:id="ruleTable">
+        <VBox spacing="0">
+            <padding><Insets left="15" right="15"/></padding>
+            
+            <!-- Rules Table -->
+            <TableView fx:id="ruleTable" VBox.vgrow="ALWAYS">
                 <columns>
                     <TableColumn fx:id="colPriority" text="Priority" prefWidth="80"/>
                     <TableColumn fx:id="colAction" text="Action" prefWidth="100"/>
                     <TableColumn fx:id="colProtocol" text="Protocol" prefWidth="100"/>
                     <TableColumn fx:id="colSource" text="Source IP" prefWidth="160"/>
                     <TableColumn fx:id="colDest" text="Dest IP" prefWidth="160"/>
-                    <TableColumn fx:id="colPort" text="Port" prefWidth="80"/>
+                    <TableColumn fx:id="colPort" text="Port/Type" prefWidth="80"/>
                 </columns>
                 <placeholder>
                     <Label text="No ACL rules defined. Click '+ Add New Rule' to start."/>
                 </placeholder>
             </TableView>
-        </StackPane>
+
+            <!-- NEW FOR 2.2: Visual Topology Canvas -->
+            <Pane fx:id="topoPane" prefHeight="200" minHeight="200" 
+                  style="-fx-background-color: white; -fx-border-color: #bdc3c7; -fx-border-width: 1 0 0 0;">
+                <!-- Content will be drawn here by MainController.java -->
+            </Pane>
+        </VBox>
     </center>
 
     <bottom>
@@ -69,7 +76,7 @@
                     <ComboBox fx:id="comboSimProtocol" prefWidth="100"/>
                 </VBox>
                 <VBox spacing="5">
-                    <Label text="Port" style="-fx-font-size: 11px;"/>
+                    <Label text="Port/Type" style="-fx-font-size: 11px;"/>
                     <TextField fx:id="txtSimPort" promptText="80" prefWidth="60"/>
                 </VBox>
                 <VBox alignment="BOTTOM_CENTER">
