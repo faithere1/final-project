@@ -50,7 +50,7 @@ public class MainController {
     private SimulatorService simulatorService = new SimulatorService();
     private RuleDAO ruleDAO = new RuleDAO();
     private LogDAO logDAO = new LogDAO();
-    private FileService fileService = new FileService(); // NEW FOR 2.3.2
+    private FileService fileService = new FileService();
 
     @FXML
     public void initialize() {
@@ -65,100 +65,41 @@ public class MainController {
         comboSimProtocol.getSelectionModel().select("ANY");
         ruleTable.setItems(ruleList);
 
+        // --- BUG FIX: RESPONSIVE TOPOLOGY ---
+        // Listen for width and height changes to redraw the topology automatically
+        topoPane.widthProperty().addListener((obs, oldVal, newVal) -> drawTopology());
+        topoPane.heightProperty().addListener((obs, oldVal, newVal) -> drawTopology());
+
         Platform.runLater(this::drawTopology);
         loadRulesFromDatabase();
     }
 
-    private void loadRulesFromDatabase() {
-        ruleList.clear();
-        ruleList.addAll(ruleDAO.getAllRules());
-    }
-
-    // --- SECTION 2.3.2: EXPORT / IMPORT LOGIC ---
-
-    @FXML
-    private void handleExportCSV() {
-        if (ruleList.isEmpty()) {
-            showAlert("Export Warning", "There are no rules to export.", Alert.AlertType.WARNING);
-            return;
-        }
-
-        FileChooser fileChooser = new FileChooser();
-        fileChooser.setTitle("Export ACL Rules");
-        fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("CSV Files", "*.csv"));
-        fileChooser.setInitialFileName("rules_backup.csv");
-
-        File file = fileChooser.showSaveDialog(ruleTable.getScene().getWindow());
-        if (file != null) {
-            try {
-                fileService.exportToCSV(ruleList, file);
-                showAlert("Success", "Rules exported successfully to " + file.getName(), Alert.AlertType.INFORMATION);
-            } catch (Exception e) {
-                showAlert("Export Error", "Could not export rules: " + e.getMessage(), Alert.AlertType.ERROR);
-            }
-        }
-    }
-
-    @FXML
-    private void handleImportCSV() {
-        FileChooser fileChooser = new FileChooser();
-        fileChooser.setTitle("Import ACL Rules");
-        fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("CSV Files", "*.csv"));
-
-        File file = fileChooser.showOpenDialog(ruleTable.getScene().getWindow());
-        if (file != null) {
-            try {
-                List<Rule> importedRules = fileService.importFromCSV(file);
-                for (Rule r : importedRules) {
-                    ruleDAO.addRule(r);
-                }
-                loadRulesFromDatabase();
-                showAlert("Import Success", importedRules.size() + " rules imported.", Alert.AlertType.INFORMATION);
-            } catch (Exception e) {
-                showAlert("Import Error", "Failed to parse CSV file.", Alert.AlertType.ERROR);
-            }
-        }
-    }
-
-    // --- SECTION 2.3.1: HISTORY LOGS ---
-
-    @FXML
-    private void handleViewHistory() {
-        // Fetch the last 20 logs from the database via LogDAO
-        String historyData = logDAO.getFormattedLogs(20);
-
-        Alert historyAlert = new Alert(Alert.AlertType.INFORMATION);
-        historyAlert.setTitle("Simulation History");
-        historyAlert.setHeaderText("Last 20 Simulation Tests");
-        
-        TextArea textArea = new TextArea(historyData);
-        textArea.setEditable(false);
-        textArea.setWrapText(false);
-        textArea.setPrefWidth(600);
-        textArea.setPrefHeight(400);
-        textArea.setStyle("-fx-font-family: 'Monospaced'; -fx-font-size: 12px;");
-
-        historyAlert.getDialogPane().setContent(textArea);
-        historyAlert.showAndWait();
-    }
-
-    // --- EXISTING TOPOLOGY & SIMULATION LOGIC ---
-
+    /**
+     * Updated to support dynamic resizing. 
+     * Recalculates device positions based on current pane width/height.
+     */
     private void drawTopology() {
+        // Prevent drawing if the pane is not yet visible/sized
+        if (topoPane.getWidth() == 0) return;
+
         topoPane.getChildren().clear();
         double width = topoPane.getWidth();
-        double centerY = topoPane.getHeight() / 2 - 10;
+        double height = topoPane.getHeight();
+        double centerY = height / 2 - 10;
 
+        // Draw Cables (Relative to current width)
         Line cable = new Line(100, centerY, width - 100, centerY);
         cable.setStroke(Color.LIGHTGRAY);
         cable.setStrokeWidth(4);
         cable.getStrokeDashArray().addAll(10d, 10d);
         topoPane.getChildren().add(cable);
 
+        // Draw Devices (Relative to current width)
         drawDevice(100, centerY, "SOURCE PC", Color.web("#3498db"));
         drawDevice(width / 2, centerY, "ROUTER", Color.web("#34495e"));
         drawDevice(width - 100, centerY, "DEST SERVER", Color.web("#2ecc71"));
 
+        // Re-initialize packetNode so it exists on the new canvas
         packetNode = new Circle(10, Color.YELLOW);
         packetNode.setStroke(Color.BLACK);
         packetNode.setVisible(false);
@@ -243,12 +184,58 @@ public class MainController {
         }
     }
 
+    // --- CSV & DIALOG HANDLERS ---
+
+    @FXML
+    private void handleExportCSV() {
+        if (ruleList.isEmpty()) return;
+        FileChooser fc = new FileChooser();
+        fc.setTitle("Export CSV");
+        fc.getExtensionFilters().add(new FileChooser.ExtensionFilter("CSV Files", "*.csv"));
+        File file = fc.showSaveDialog(ruleTable.getScene().getWindow());
+        if (file != null) {
+            try {
+                fileService.exportToCSV(ruleList, file);
+                showAlert("Success", "Export complete.", Alert.AlertType.INFORMATION);
+            } catch (Exception e) { e.printStackTrace(); }
+        }
+    }
+
+    @FXML
+    private void handleImportCSV() {
+        FileChooser fc = new FileChooser();
+        File file = fc.showOpenDialog(ruleTable.getScene().getWindow());
+        if (file != null) {
+            try {
+                List<Rule> imported = fileService.importFromCSV(file);
+                for (Rule r : imported) ruleDAO.addRule(r);
+                loadRulesFromDatabase();
+            } catch (Exception e) { e.printStackTrace(); }
+        }
+    }
+
+    @FXML
+    private void handleViewHistory() {
+        String data = logDAO.getFormattedLogs(20);
+        Alert alert = new Alert(Alert.AlertType.INFORMATION);
+        alert.setTitle("History");
+        TextArea area = new TextArea(data);
+        area.setEditable(false);
+        area.setStyle("-fx-font-family: 'Monospaced';");
+        alert.getDialogPane().setContent(area);
+        alert.show();
+    }
+
+    private void loadRulesFromDatabase() {
+        ruleList.clear();
+        ruleList.addAll(ruleDAO.getAllRules());
+    }
+
     @FXML private void handleAddRule() {
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/aclsim/add_rule_dialog.fxml"));
             Parent root = loader.load();
             Stage stage = new Stage();
-            stage.setTitle("Add New Rule");
             stage.setScene(new Scene(root));
             stage.showAndWait();
             loadRulesFromDatabase();
@@ -264,7 +251,6 @@ public class MainController {
             AddRuleController controller = loader.getController();
             controller.setRuleForEdit(selected);
             Stage stage = new Stage();
-            stage.setTitle("Edit Rule");
             stage.setScene(new Scene(root));
             stage.showAndWait();
             if (controller.getCreatedRule() != null) {
