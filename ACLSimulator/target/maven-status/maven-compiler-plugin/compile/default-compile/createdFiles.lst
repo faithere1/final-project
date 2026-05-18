@@ -2,6 +2,7 @@ com/aclsim/model/Rule.class
 com/aclsim/model/Packet.class
 com/aclsim/database/LogDAO.class
 com/aclsim/service/SimulatorService.class
+com/aclsim/service/FileService.class
 com/aclsim/service/NetworkUtils.class
 com/aclsim/database/RuleDAO.class
 module-info.class

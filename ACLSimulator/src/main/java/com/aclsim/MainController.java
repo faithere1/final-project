@@ -4,6 +4,7 @@ import com.aclsim.database.LogDAO;
 import com.aclsim.database.RuleDAO;
 import com.aclsim.model.Packet;
 import com.aclsim.model.Rule;
+import com.aclsim.service.FileService;
 import com.aclsim.service.SimulatorService;
 import javafx.animation.*;
 import javafx.application.Platform;
@@ -19,10 +20,13 @@ import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.*;
 import javafx.scene.text.Text;
+import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import javafx.util.Duration;
 
+import java.io.File;
 import java.io.IOException;
+import java.util.List;
 import java.util.Optional;
 
 public class MainController {
@@ -45,9 +49,8 @@ public class MainController {
     private ObservableList<Rule> ruleList = FXCollections.observableArrayList();
     private SimulatorService simulatorService = new SimulatorService();
     private RuleDAO ruleDAO = new RuleDAO();
-    
-    // NEW FOR 2.3.1: Data Access for History Logs
     private LogDAO logDAO = new LogDAO();
+    private FileService fileService = new FileService(); // NEW FOR 2.3.2
 
     @FXML
     public void initialize() {
@@ -66,11 +69,85 @@ public class MainController {
         loadRulesFromDatabase();
     }
 
+    private void loadRulesFromDatabase() {
+        ruleList.clear();
+        ruleList.addAll(ruleDAO.getAllRules());
+    }
+
+    // --- SECTION 2.3.2: EXPORT / IMPORT LOGIC ---
+
+    @FXML
+    private void handleExportCSV() {
+        if (ruleList.isEmpty()) {
+            showAlert("Export Warning", "There are no rules to export.", Alert.AlertType.WARNING);
+            return;
+        }
+
+        FileChooser fileChooser = new FileChooser();
+        fileChooser.setTitle("Export ACL Rules");
+        fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("CSV Files", "*.csv"));
+        fileChooser.setInitialFileName("rules_backup.csv");
+
+        File file = fileChooser.showSaveDialog(ruleTable.getScene().getWindow());
+        if (file != null) {
+            try {
+                fileService.exportToCSV(ruleList, file);
+                showAlert("Success", "Rules exported successfully to " + file.getName(), Alert.AlertType.INFORMATION);
+            } catch (Exception e) {
+                showAlert("Export Error", "Could not export rules: " + e.getMessage(), Alert.AlertType.ERROR);
+            }
+        }
+    }
+
+    @FXML
+    private void handleImportCSV() {
+        FileChooser fileChooser = new FileChooser();
+        fileChooser.setTitle("Import ACL Rules");
+        fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("CSV Files", "*.csv"));
+
+        File file = fileChooser.showOpenDialog(ruleTable.getScene().getWindow());
+        if (file != null) {
+            try {
+                List<Rule> importedRules = fileService.importFromCSV(file);
+                for (Rule r : importedRules) {
+                    ruleDAO.addRule(r);
+                }
+                loadRulesFromDatabase();
+                showAlert("Import Success", importedRules.size() + " rules imported.", Alert.AlertType.INFORMATION);
+            } catch (Exception e) {
+                showAlert("Import Error", "Failed to parse CSV file.", Alert.AlertType.ERROR);
+            }
+        }
+    }
+
+    // --- SECTION 2.3.1: HISTORY LOGS ---
+
+    @FXML
+    private void handleViewHistory() {
+        // Fetch the last 20 logs from the database via LogDAO
+        String historyData = logDAO.getFormattedLogs(20);
+
+        Alert historyAlert = new Alert(Alert.AlertType.INFORMATION);
+        historyAlert.setTitle("Simulation History");
+        historyAlert.setHeaderText("Last 20 Simulation Tests");
+        
+        TextArea textArea = new TextArea(historyData);
+        textArea.setEditable(false);
+        textArea.setWrapText(false);
+        textArea.setPrefWidth(600);
+        textArea.setPrefHeight(400);
+        textArea.setStyle("-fx-font-family: 'Monospaced'; -fx-font-size: 12px;");
+
+        historyAlert.getDialogPane().setContent(textArea);
+        historyAlert.showAndWait();
+    }
+
+    // --- EXISTING TOPOLOGY & SIMULATION LOGIC ---
+
     private void drawTopology() {
         topoPane.getChildren().clear();
         double width = topoPane.getWidth();
-        double height = topoPane.getHeight();
-        double centerY = height / 2 - 10;
+        double centerY = topoPane.getHeight() / 2 - 10;
 
         Line cable = new Line(100, centerY, width - 100, centerY);
         cable.setStroke(Color.LIGHTGRAY);
@@ -93,8 +170,7 @@ public class MainController {
         circle.setStroke(Color.DARKSLATEGRAY);
         circle.setStrokeWidth(2);
         Text text = new Text(name);
-        text.setX(x - 35);
-        text.setY(y + 45);
+        text.setX(x - 35); text.setY(y + 45);
         text.setStyle("-fx-font-weight: bold; -fx-font-size: 11px; -fx-fill: #2c3e50;");
         topoPane.getChildren().addAll(circle, text);
     }
@@ -131,31 +207,55 @@ public class MainController {
         }
     }
 
-    private void loadRulesFromDatabase() {
-        ruleList.clear();
-        ruleList.addAll(ruleDAO.getAllRules());
+    @FXML
+    private void handleSimulate() {
+        try {
+            String src = txtSimSource.getText();
+            String dest = txtSimDest.getText();
+            String proto = comboSimProtocol.getValue();
+            int val = txtSimPort.getText().isEmpty() ? -1 : Integer.parseInt(txtSimPort.getText());
+
+            int destPort = proto.equalsIgnoreCase("ICMP") ? -1 : val;
+            int icmpType = proto.equalsIgnoreCase("ICMP") ? val : -1;
+
+            Packet packet = new Packet(src, dest, proto, destPort, icmpType);
+            Rule match = simulatorService.simulate(packet, ruleList);
+
+            boolean permitted = (match != null && match.getAction().equals("PERMIT"));
+            String resultText = match != null ? "RESULT: " + match.getAction() + " (Rule #" + match.getPriority() + ")" : "RESULT: DENY (Implicit Deny)";
+            
+            lblResult.setText(resultText);
+            lblResult.setTextFill(permitted ? Color.valueOf("#2ecc71") : Color.valueOf("#ff7675"));
+            
+            if(match != null) {
+                ruleTable.getSelectionModel().select(match);
+                ruleTable.scrollTo(match);
+            } else {
+                ruleTable.getSelectionModel().clearSelection();
+            }
+
+            logDAO.saveLog(packet, resultText, match != null ? match.getId() : null);
+            animatePacket(permitted);
+
+        } catch (NumberFormatException e) {
+            lblResult.setText("ERROR: Port/Type must be a number");
+            lblResult.setTextFill(Color.valueOf("#fdcb6e"));
+        }
     }
 
-    @FXML
-    private void handleAddRule() {
+    @FXML private void handleAddRule() {
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/aclsim/add_rule_dialog.fxml"));
             Parent root = loader.load();
             Stage stage = new Stage();
             stage.setTitle("Add New Rule");
-            stage.initOwner(ruleTable.getScene().getWindow());
             stage.setScene(new Scene(root));
-            AddRuleController controller = loader.getController();
             stage.showAndWait();
-            if (controller.getCreatedRule() != null) {
-                ruleDAO.addRule(controller.getCreatedRule());
-                loadRulesFromDatabase();
-            }
+            loadRulesFromDatabase();
         } catch (IOException e) { e.printStackTrace(); }
     }
 
-    @FXML
-    private void handleEditRule() {
+    @FXML private void handleEditRule() {
         Rule selected = ruleTable.getSelectionModel().getSelectedItem();
         if (selected == null) return;
         try {
@@ -174,54 +274,7 @@ public class MainController {
         } catch (IOException e) { e.printStackTrace(); }
     }
 
-    /**
-     * Updated for 2.3.1: Captures simulation results and persists them to SQLite.
-     */
-    @FXML
-    private void handleSimulate() {
-        try {
-            String src = txtSimSource.getText();
-            String dest = txtSimDest.getText();
-            String proto = comboSimProtocol.getValue();
-            int val = txtSimPort.getText().isEmpty() ? -1 : Integer.parseInt(txtSimPort.getText());
-
-            int destPort = proto.equalsIgnoreCase("ICMP") ? -1 : val;
-            int icmpType = proto.equalsIgnoreCase("ICMP") ? val : -1;
-
-            Packet packet = new Packet(src, dest, proto, destPort, icmpType);
-            Rule match = simulatorService.simulate(packet, ruleList);
-
-            boolean permitted = (match != null && match.getAction().equals("PERMIT"));
-            String resultText;
-            Integer matchedRuleId = null;
-
-            if (match != null) {
-                resultText = "RESULT: " + match.getAction() + " (Rule #" + match.getPriority() + ")";
-                lblResult.setText(resultText);
-                lblResult.setTextFill(permitted ? Color.valueOf("#2ecc71") : Color.valueOf("#ff7675"));
-                ruleTable.getSelectionModel().select(match);
-                ruleTable.scrollTo(match);
-                matchedRuleId = match.getId();
-            } else {
-                resultText = "RESULT: DENY (Implicit Deny)";
-                lblResult.setText(resultText);
-                lblResult.setTextFill(Color.valueOf("#fab1a0"));
-                ruleTable.getSelectionModel().clearSelection();
-            }
-
-            // NEW FOR 2.3.1: Save this event to the history table
-            logDAO.saveLog(packet, resultText, matchedRuleId);
-
-            animatePacket(permitted);
-
-        } catch (NumberFormatException e) {
-            lblResult.setText("ERROR: Port/Type must be a number");
-            lblResult.setTextFill(Color.valueOf("#fdcb6e"));
-        }
-    }
-
-    @FXML
-    private void handleDeleteRule() {
+    @FXML private void handleDeleteRule() {
         Rule selected = ruleTable.getSelectionModel().getSelectedItem();
         if (selected != null) {
             ruleDAO.deleteRule(selected.getId());
@@ -229,8 +282,7 @@ public class MainController {
         }
     }
 
-    @FXML
-    private void handleClearAll() {
+    @FXML private void handleClearAll() {
         Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
         alert.setContentText("Delete all rules?");
         Optional<ButtonType> result = alert.showAndWait();
@@ -238,5 +290,12 @@ public class MainController {
             for (Rule r : ruleList) ruleDAO.deleteRule(r.getId());
             loadRulesFromDatabase();
         }
+    }
+
+    private void showAlert(String title, String content, Alert.AlertType type) {
+        Alert alert = new Alert(type);
+        alert.setTitle(title);
+        alert.setContentText(content);
+        alert.show();
     }
 }

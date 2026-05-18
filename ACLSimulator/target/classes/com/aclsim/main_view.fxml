@@ -6,22 +6,35 @@
 <BorderPane xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml"
             fx:controller="com.aclsim.MainController" 
             stylesheets="@style.css"
-            prefHeight="750.0" prefWidth="900.0"> <!-- Slightly taller to accommodate visuals -->
+            prefHeight="780.0" prefWidth="1000.0"> <!-- Adjusted width for more buttons -->
     
     <top>
         <VBox spacing="10" styleClass="header-section">
             <padding><Insets top="15" right="15" bottom="15" left="15"/></padding>
             <Label text="ACL Simulator Dashboard" style="-fx-font-size: 24px; -fx-font-weight: bold; -fx-text-fill: #2c3e50;"/>
-            <HBox spacing="10">
-                <Button text="+ Add New Rule" fx:id="btnAddRule" onAction="#handleAddRule" 
+            <HBox spacing="10" alignment="CENTER_LEFT">
+                <!-- CRUD Operations -->
+                <Button text="+ Add Rule" fx:id="btnAddRule" onAction="#handleAddRule" 
                         style="-fx-background-color: #3498db; -fx-text-fill: white;"/>
-                
                 <Button text="Edit Selected" onAction="#handleEditRule" 
                         style="-fx-background-color: #f1c40f; -fx-text-fill: white;"/>
-                
                 <Button text="Delete Selected" fx:id="btnDeleteRule" onAction="#handleDeleteRule"
                         style="-fx-background-color: #e67e22; -fx-text-fill: white;"/>
                 
+                <Separator orientation="VERTICAL" />
+
+                <!-- NEW FOR 2.3: Data Handling -->
+                <Button text="Export CSV" onAction="#handleExportCSV" 
+                        style="-fx-background-color: #9b59b6; -fx-text-fill: white;"/>
+                <Button text="Import CSV" onAction="#handleImportCSV" 
+                        style="-fx-background-color: #8e44ad; -fx-text-fill: white;"/>
+                
+                <Separator orientation="VERTICAL" />
+                
+                <!-- NEW FOR 2.3.1: Logging -->
+                <Button text="View History" onAction="#handleViewHistory" 
+                        style="-fx-background-color: #34495e; -fx-text-fill: white;"/>
+
                 <Region HBox.hgrow="ALWAYS" /> 
                 
                 <Button text="Clear All Rules" onAction="#handleClearAll"
@@ -34,25 +47,23 @@
         <VBox spacing="0">
             <padding><Insets left="15" right="15"/></padding>
             
-            <!-- Rules Table -->
             <TableView fx:id="ruleTable" VBox.vgrow="ALWAYS">
                 <columns>
                     <TableColumn fx:id="colPriority" text="Priority" prefWidth="80"/>
                     <TableColumn fx:id="colAction" text="Action" prefWidth="100"/>
                     <TableColumn fx:id="colProtocol" text="Protocol" prefWidth="100"/>
-                    <TableColumn fx:id="colSource" text="Source IP" prefWidth="160"/>
-                    <TableColumn fx:id="colDest" text="Dest IP" prefWidth="160"/>
-                    <TableColumn fx:id="colPort" text="Port/Type" prefWidth="80"/>
+                    <TableColumn fx:id="colSource" text="Source IP" prefWidth="180"/>
+                    <TableColumn fx:id="colDest" text="Dest IP" prefWidth="180"/>
+                    <TableColumn fx:id="colPort" text="Port/Type" prefWidth="100"/>
                 </columns>
                 <placeholder>
-                    <Label text="No ACL rules defined. Click '+ Add New Rule' to start."/>
+                    <Label text="No ACL rules defined. Click '+ Add Rule' to start."/>
                 </placeholder>
             </TableView>
 
-            <!-- NEW FOR 2.2: Visual Topology Canvas -->
-            <Pane fx:id="topoPane" prefHeight="200" minHeight="200" 
+            <Pane fx:id="topoPane" prefHeight="180" minHeight="180" 
                   style="-fx-background-color: white; -fx-border-color: #bdc3c7; -fx-border-width: 1 0 0 0;">
-                <!-- Content will be drawn here by MainController.java -->
+                <!-- Visualization drawn by MainController -->
             </Pane>
         </VBox>
     </center>
@@ -81,7 +92,7 @@
                 </VBox>
                 <VBox alignment="BOTTOM_CENTER">
                     <Button text="RUN SIMULATION" fx:id="btnSimulate" onAction="#handleSimulate" 
-                            prefHeight="35" prefWidth="150"
+                            prefHeight="35" prefWidth="160"
                             style="-fx-background-color: #27ae60; -fx-text-fill: white; -fx-font-weight: bold;"/>
                 </VBox>
             </HBox>
