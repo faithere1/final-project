@@ -33,6 +33,7 @@
 .table-row-cell:odd { -fx-background-color: #fdfdfd; }
 .table-row-cell:even { -fx-background-color: #f2f2f2; }
 
+/* Highlight row blue when selected or dragged */
 .table-view .table-row-cell:selected {
     -fx-background-color: #3498db;
 }
@@ -45,28 +46,28 @@
     -fx-font-weight: bold;
 }
 
-.button:hover { -fx-opacity: 0.85; -fx-scale-x: 1.02; -fx-scale-y: 1.02; }
+.button:hover { 
+    -fx-opacity: 0.85; 
+    -fx-scale-x: 1.02; 
+    -fx-scale-y: 1.02; 
+}
 
-/* --- UPDATED RESULT LABEL (The Terminal Look) --- */
+/* Simulation Result Label (Terminal Look) */
 #lblResult {
     -fx-font-family: "Consolas", "Monospaced", monospace;
-    -fx-font-size: 22px;             /* Massive font size for clarity */
+    -fx-font-size: 22px;
     -fx-font-weight: bold;
-    
-    -fx-background-color: #1e272e;   /* Deepest Navy/Black background */
-    -fx-text-fill: #ffffff;          /* Default white text */
-    
-    -fx-padding: 12 25 12 25;        /* Wide padding for breathing room */
+    -fx-background-color: #1e272e;
+    -fx-text-fill: #ffffff;
+    -fx-padding: 12 25 12 25;
     -fx-background-radius: 8;
-    -fx-border-color: #34495e;       /* Modern subtle border */
+    -fx-border-color: #34495e;
     -fx-border-radius: 8;
     -fx-border-width: 2;
-    
-    /* Make the result box feel substantial */
     -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.3), 10, 0, 0, 0);
 }
 
-/* Styling for the Simulation Panel container */
+/* Simulation Panel */
 .bottom-panel {
     -fx-background-color: #ecf0f1;
     -fx-border-color: #bdc3c7;
@@ -77,4 +78,29 @@
     -fx-padding: 8;
     -fx-border-color: #bdc3c7;
     -fx-border-radius: 4;
+    -fx-border-width: 1px;
+}
+
+/* --- NEW FOR 2.4.2: REAL-TIME VALIDATION STYLES --- */
+
+/* Error State: Bright red border and soft red background */
+.field-error {
+    -fx-border-color: #e74c3c !important;
+    -fx-border-width: 2px !important;
+    -fx-background-color: #fff5f5 !important;
+    -fx-effect: dropshadow(three-pass-box, rgba(231, 76, 60, 0.2), 5, 0, 0, 0);
+}
+
+/* Success State: Clean green border and soft green background */
+.field-success {
+    -fx-border-color: #2ecc71 !important;
+    -fx-border-width: 2px !important;
+    -fx-background-color: #f5fff5 !important;
+    -fx-effect: dropshadow(three-pass-box, rgba(46, 204, 113, 0.2), 5, 0, 0, 0);
+}
+
+/* Standard Focus State (Blue) */
+.text-field:focused {
+    -fx-border-color: #3498db;
+    -fx-effect: dropshadow(three-pass-box, rgba(52, 152, 219, 0.3), 5, 0, 0, 0);
 }
