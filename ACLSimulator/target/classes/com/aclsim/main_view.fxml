@@ -6,7 +6,7 @@
 <BorderPane xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml"
             fx:controller="com.aclsim.MainController" 
             stylesheets="@style.css"
-            prefHeight="780.0" prefWidth="1000.0"> <!-- Adjusted width for more buttons -->
+            prefHeight="780.0" prefWidth="1100.0"> <!-- Widened slightly for more tools -->
     
     <top>
         <VBox spacing="10" styleClass="header-section">
@@ -23,7 +23,7 @@
                 
                 <Separator orientation="VERTICAL" />
 
-                <!-- NEW FOR 2.3: Data Handling -->
+                <!-- Data Handling -->
                 <Button text="Export CSV" onAction="#handleExportCSV" 
                         style="-fx-background-color: #9b59b6; -fx-text-fill: white;"/>
                 <Button text="Import CSV" onAction="#handleImportCSV" 
@@ -31,9 +31,13 @@
                 
                 <Separator orientation="VERTICAL" />
                 
-                <!-- NEW FOR 2.3.1: Logging -->
+                <!-- NEW FOR 2.3.1 & 2.3.3: Analysis Tools -->
                 <Button text="View History" onAction="#handleViewHistory" 
                         style="-fx-background-color: #34495e; -fx-text-fill: white;"/>
+                
+                <!-- NEW BUTTON FOR 2.3.3 -->
+                <Button text="Cisco CLI" onAction="#handleGenerateCisco" 
+                        style="-fx-background-color: #2c3e50; -fx-text-fill: white;"/>
 
                 <Region HBox.hgrow="ALWAYS" /> 
                 

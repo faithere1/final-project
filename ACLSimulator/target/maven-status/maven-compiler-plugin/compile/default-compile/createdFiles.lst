@@ -1,3 +1,4 @@
+com/aclsim/service/CiscoGeneratorService.class
 com/aclsim/model/Rule.class
 com/aclsim/model/Packet.class
 com/aclsim/database/LogDAO.class

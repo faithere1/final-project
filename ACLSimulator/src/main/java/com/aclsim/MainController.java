@@ -4,6 +4,7 @@ import com.aclsim.database.LogDAO;
 import com.aclsim.database.RuleDAO;
 import com.aclsim.model.Packet;
 import com.aclsim.model.Rule;
+import com.aclsim.service.CiscoGeneratorService;
 import com.aclsim.service.FileService;
 import com.aclsim.service.SimulatorService;
 import javafx.animation.*;
@@ -51,6 +52,7 @@ public class MainController {
     private RuleDAO ruleDAO = new RuleDAO();
     private LogDAO logDAO = new LogDAO();
     private FileService fileService = new FileService();
+    private CiscoGeneratorService ciscoService = new CiscoGeneratorService();
 
     @FXML
     public void initialize() {
@@ -65,8 +67,6 @@ public class MainController {
         comboSimProtocol.getSelectionModel().select("ANY");
         ruleTable.setItems(ruleList);
 
-        // --- BUG FIX: RESPONSIVE TOPOLOGY ---
-        // Listen for width and height changes to redraw the topology automatically
         topoPane.widthProperty().addListener((obs, oldVal, newVal) -> drawTopology());
         topoPane.heightProperty().addListener((obs, oldVal, newVal) -> drawTopology());
 
@@ -74,80 +74,78 @@ public class MainController {
         loadRulesFromDatabase();
     }
 
-    /**
-     * Updated to support dynamic resizing. 
-     * Recalculates device positions based on current pane width/height.
-     */
-    private void drawTopology() {
-        // Prevent drawing if the pane is not yet visible/sized
-        if (topoPane.getWidth() == 0) return;
+    // FIXED handleAddRule Logic
+    @FXML 
+    private void handleAddRule() {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/aclsim/add_rule_dialog.fxml"));
+            Parent root = loader.load();
+            
+            AddRuleController controller = loader.getController(); // Get controller instance
+            
+            Stage stage = new Stage();
+            stage.setTitle("Add New Rule");
+            stage.initOwner(ruleTable.getScene().getWindow());
+            stage.setScene(new Scene(root));
+            stage.showAndWait(); 
 
-        topoPane.getChildren().clear();
-        double width = topoPane.getWidth();
-        double height = topoPane.getHeight();
-        double centerY = height / 2 - 10;
-
-        // Draw Cables (Relative to current width)
-        Line cable = new Line(100, centerY, width - 100, centerY);
-        cable.setStroke(Color.LIGHTGRAY);
-        cable.setStrokeWidth(4);
-        cable.getStrokeDashArray().addAll(10d, 10d);
-        topoPane.getChildren().add(cable);
-
-        // Draw Devices (Relative to current width)
-        drawDevice(100, centerY, "SOURCE PC", Color.web("#3498db"));
-        drawDevice(width / 2, centerY, "ROUTER", Color.web("#34495e"));
-        drawDevice(width - 100, centerY, "DEST SERVER", Color.web("#2ecc71"));
-
-        // Re-initialize packetNode so it exists on the new canvas
-        packetNode = new Circle(10, Color.YELLOW);
-        packetNode.setStroke(Color.BLACK);
-        packetNode.setVisible(false);
-        topoPane.getChildren().add(packetNode);
-    }
-
-    private void drawDevice(double x, double y, String name, Color color) {
-        Circle circle = new Circle(x, y, 25, color);
-        circle.setStroke(Color.DARKSLATEGRAY);
-        circle.setStrokeWidth(2);
-        Text text = new Text(name);
-        text.setX(x - 35); text.setY(y + 45);
-        text.setStyle("-fx-font-weight: bold; -fx-font-size: 11px; -fx-fill: #2c3e50;");
-        topoPane.getChildren().addAll(circle, text);
-    }
-
-    private void animatePacket(boolean isPermitted) {
-        double startX = 100;
-        double routerX = topoPane.getWidth() / 2;
-        double endX = topoPane.getWidth() - 100;
-        double centerY = topoPane.getHeight() / 2 - 10;
-
-        packetNode.setTranslateX(0);
-        packetNode.setCenterX(startX);
-        packetNode.setCenterY(centerY);
-        packetNode.setFill(isPermitted ? Color.web("#2ecc71") : Color.web("#ff7675"));
-        packetNode.setOpacity(1.0);
-        packetNode.setVisible(true);
-
-        TranslateTransition toRouter = new TranslateTransition(Duration.seconds(1.2), packetNode);
-        toRouter.setToX(routerX - startX);
-
-        if (isPermitted) {
-            TranslateTransition toDest = new TranslateTransition(Duration.seconds(1.2), packetNode);
-            toDest.setToX(endX - startX);
-            new SequentialTransition(toRouter, toDest).play();
-        } else {
-            toRouter.setOnFinished(e -> {
-                TranslateTransition shake = new TranslateTransition(Duration.seconds(0.1), packetNode);
-                shake.setByX(5); shake.setAutoReverse(true); shake.setCycleCount(4);
-                FadeTransition fade = new FadeTransition(Duration.seconds(0.5), packetNode);
-                fade.setToValue(0);
-                new SequentialTransition(shake, fade).play();
-            });
-            toRouter.play();
+            // GET THE RULE AND SAVE IT
+            Rule newRule = controller.getCreatedRule();
+            if (newRule != null) {
+                ruleDAO.addRule(newRule); // SAVE TO DATABASE
+                loadRulesFromDatabase();  // REFRESH TABLE
+            }
+        } catch (IOException e) { 
+            e.printStackTrace(); 
         }
     }
 
+    @FXML 
+    private void handleEditRule() {
+        Rule selected = ruleTable.getSelectionModel().getSelectedItem();
+        if (selected == null) {
+            showAlert("Selection Required", "Please select a rule to edit.", Alert.AlertType.WARNING);
+            return;
+        }
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/aclsim/add_rule_dialog.fxml"));
+            Parent root = loader.load();
+            AddRuleController controller = loader.getController();
+            controller.setRuleForEdit(selected);
+            
+            Stage stage = new Stage();
+            stage.setTitle("Edit Rule");
+            stage.setScene(new Scene(root));
+            stage.showAndWait();
+            
+            Rule updatedRule = controller.getCreatedRule();
+            if (updatedRule != null) {
+                ruleDAO.updateRule(updatedRule); 
+                loadRulesFromDatabase();
+            }
+        } catch (IOException e) { e.printStackTrace(); }
+    }
+
+    @FXML
+    private void handleGenerateCisco() {
+        if (ruleList.isEmpty()) return;
+        String ciscoConfig = ciscoService.generateConfig(ruleList);
+        Alert alert = new Alert(Alert.AlertType.INFORMATION);
+        alert.setTitle("Cisco Configuration");
+        TextArea textArea = new TextArea(ciscoConfig);
+        textArea.setEditable(false);
+        textArea.setStyle("-fx-font-family: 'Monospaced';");
+        alert.getDialogPane().setContent(textArea);
+        alert.showAndWait();
+    }
+
+    private void loadRulesFromDatabase() {
+        ruleList.clear();
+        ruleList.addAll(ruleDAO.getAllRules());
+    }
+
+    // --- OTHER HANDLERS AND ANIMATIONS ---
+    
     @FXML
     private void handleSimulate() {
         try {
@@ -155,7 +153,6 @@ public class MainController {
             String dest = txtSimDest.getText();
             String proto = comboSimProtocol.getValue();
             int val = txtSimPort.getText().isEmpty() ? -1 : Integer.parseInt(txtSimPort.getText());
-
             int destPort = proto.equalsIgnoreCase("ICMP") ? -1 : val;
             int icmpType = proto.equalsIgnoreCase("ICMP") ? val : -1;
 
@@ -177,32 +174,66 @@ public class MainController {
 
             logDAO.saveLog(packet, resultText, match != null ? match.getId() : null);
             animatePacket(permitted);
-
         } catch (NumberFormatException e) {
-            lblResult.setText("ERROR: Port/Type must be a number");
-            lblResult.setTextFill(Color.valueOf("#fdcb6e"));
+            lblResult.setText("ERROR: Port must be a number");
         }
     }
 
-    // --- CSV & DIALOG HANDLERS ---
+    private void drawTopology() {
+        if (topoPane.getWidth() == 0) return;
+        topoPane.getChildren().clear();
+        double width = topoPane.getWidth();
+        double centerY = topoPane.getHeight() / 2 - 10;
+        Line cable = new Line(100, centerY, width - 100, centerY);
+        cable.setStroke(Color.LIGHTGRAY);
+        cable.setStrokeWidth(4);
+        cable.getStrokeDashArray().addAll(10d, 10d);
+        topoPane.getChildren().add(cable);
+        drawDevice(100, centerY, "SOURCE PC", Color.web("#3498db"));
+        drawDevice(width / 2, centerY, "ROUTER", Color.web("#34495e"));
+        drawDevice(width - 100, centerY, "DEST SERVER", Color.web("#2ecc71"));
+        packetNode = new Circle(10, Color.YELLOW);
+        packetNode.setVisible(false);
+        topoPane.getChildren().add(packetNode);
+    }
 
-    @FXML
-    private void handleExportCSV() {
-        if (ruleList.isEmpty()) return;
+    private void drawDevice(double x, double y, String name, Color color) {
+        Circle circle = new Circle(x, y, 25, color);
+        Text text = new Text(name);
+        text.setX(x - 35); text.setY(y + 45);
+        topoPane.getChildren().addAll(circle, text);
+    }
+
+    private void animatePacket(boolean isPermitted) {
+        double startX = 100;
+        double routerX = topoPane.getWidth() / 2;
+        double endX = topoPane.getWidth() - 100;
+        double centerY = topoPane.getHeight() / 2 - 10;
+        packetNode.setTranslateX(0);
+        packetNode.setCenterX(startX);
+        packetNode.setCenterY(centerY);
+        packetNode.setFill(isPermitted ? Color.web("#2ecc71") : Color.web("#ff7675"));
+        packetNode.setVisible(true);
+        TranslateTransition toRouter = new TranslateTransition(Duration.seconds(1.2), packetNode);
+        toRouter.setToX(routerX - startX);
+        if (isPermitted) {
+            TranslateTransition toDest = new TranslateTransition(Duration.seconds(1.2), packetNode);
+            toDest.setToX(endX - startX);
+            new SequentialTransition(toRouter, toDest).play();
+        } else {
+            toRouter.play();
+        }
+    }
+
+    @FXML private void handleExportCSV() {
         FileChooser fc = new FileChooser();
-        fc.setTitle("Export CSV");
-        fc.getExtensionFilters().add(new FileChooser.ExtensionFilter("CSV Files", "*.csv"));
         File file = fc.showSaveDialog(ruleTable.getScene().getWindow());
         if (file != null) {
-            try {
-                fileService.exportToCSV(ruleList, file);
-                showAlert("Success", "Export complete.", Alert.AlertType.INFORMATION);
-            } catch (Exception e) { e.printStackTrace(); }
+            try { fileService.exportToCSV(ruleList, file); } catch (Exception e) { e.printStackTrace(); }
         }
     }
 
-    @FXML
-    private void handleImportCSV() {
+    @FXML private void handleImportCSV() {
         FileChooser fc = new FileChooser();
         File file = fc.showOpenDialog(ruleTable.getScene().getWindow());
         if (file != null) {
@@ -214,50 +245,13 @@ public class MainController {
         }
     }
 
-    @FXML
-    private void handleViewHistory() {
+    @FXML private void handleViewHistory() {
         String data = logDAO.getFormattedLogs(20);
         Alert alert = new Alert(Alert.AlertType.INFORMATION);
-        alert.setTitle("History");
         TextArea area = new TextArea(data);
         area.setEditable(false);
-        area.setStyle("-fx-font-family: 'Monospaced';");
         alert.getDialogPane().setContent(area);
         alert.show();
-    }
-
-    private void loadRulesFromDatabase() {
-        ruleList.clear();
-        ruleList.addAll(ruleDAO.getAllRules());
-    }
-
-    @FXML private void handleAddRule() {
-        try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/aclsim/add_rule_dialog.fxml"));
-            Parent root = loader.load();
-            Stage stage = new Stage();
-            stage.setScene(new Scene(root));
-            stage.showAndWait();
-            loadRulesFromDatabase();
-        } catch (IOException e) { e.printStackTrace(); }
-    }
-
-    @FXML private void handleEditRule() {
-        Rule selected = ruleTable.getSelectionModel().getSelectedItem();
-        if (selected == null) return;
-        try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/aclsim/add_rule_dialog.fxml"));
-            Parent root = loader.load();
-            AddRuleController controller = loader.getController();
-            controller.setRuleForEdit(selected);
-            Stage stage = new Stage();
-            stage.setScene(new Scene(root));
-            stage.showAndWait();
-            if (controller.getCreatedRule() != null) {
-                ruleDAO.updateRule(controller.getCreatedRule());
-                loadRulesFromDatabase();
-            }
-        } catch (IOException e) { e.printStackTrace(); }
     }
 
     @FXML private void handleDeleteRule() {
@@ -271,8 +265,7 @@ public class MainController {
     @FXML private void handleClearAll() {
         Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
         alert.setContentText("Delete all rules?");
-        Optional<ButtonType> result = alert.showAndWait();
-        if (result.isPresent() && result.get() == ButtonType.OK) {
+        if (alert.showAndWait().get() == ButtonType.OK) {
             for (Rule r : ruleList) ruleDAO.deleteRule(r.getId());
             loadRulesFromDatabase();
         }
