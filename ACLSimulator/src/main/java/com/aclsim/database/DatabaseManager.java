@@ -13,7 +13,8 @@ public class DatabaseManager {
     }
 
     public static void initializeDatabase() {
-        String createTableSQL = """
+        // Updated rules table: dest_port is now TEXT to support ranges like "80-443"
+        String createRulesTable = """
             CREATE TABLE IF NOT EXISTS rules (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 priority INTEGER NOT NULL,
@@ -21,16 +22,34 @@ public class DatabaseManager {
                 protocol TEXT NOT NULL,
                 source_ip TEXT NOT NULL,
                 dest_ip TEXT NOT NULL,
-                dest_port INTEGER
+                dest_port TEXT 
+            );
+            """;
+
+        // NEW FOR 2.3.1: Table to store simulation history
+        String createLogsTable = """
+            CREATE TABLE IF NOT EXISTS simulation_logs (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
+                src_ip TEXT,
+                dest_ip TEXT,
+                protocol TEXT,
+                port TEXT,
+                result TEXT,
+                matched_rule_id INTEGER
             );
             """;
 
         try (Connection conn = getConnection();
              Statement stmt = conn.createStatement()) {
-            stmt.execute(createTableSQL);
-            System.out.println(">>> Database initialized successfully.");
+            
+            // Execute both table creations
+            stmt.execute(createRulesTable);
+            stmt.execute(createLogsTable);
+            
+            System.out.println(">>> Database initialized: Rules and Logs tables are ready.");
         } catch (SQLException e) {
-            System.err.println(">>> Database error: " + e.getMessage());
+            System.err.println(">>> Database initialization error: " + e.getMessage());
         }
     }
 }

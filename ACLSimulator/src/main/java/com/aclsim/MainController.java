@@ -1,5 +1,6 @@
 package com.aclsim;
 
+import com.aclsim.database.LogDAO;
 import com.aclsim.database.RuleDAO;
 import com.aclsim.model.Packet;
 import com.aclsim.model.Rule;
@@ -38,17 +39,18 @@ public class MainController {
     @FXML private ComboBox<String> comboSimProtocol;
     @FXML private Label lblResult;
 
-    // NEW FOR 2.2: Visualization components
     @FXML private Pane topoPane;
     private Circle packetNode;
 
     private ObservableList<Rule> ruleList = FXCollections.observableArrayList();
     private SimulatorService simulatorService = new SimulatorService();
     private RuleDAO ruleDAO = new RuleDAO();
+    
+    // NEW FOR 2.3.1: Data Access for History Logs
+    private LogDAO logDAO = new LogDAO();
 
     @FXML
     public void initialize() {
-        // 1. Link Table Columns
         colPriority.setCellValueFactory(new PropertyValueFactory<>("priority"));
         colAction.setCellValueFactory(new PropertyValueFactory<>("action"));
         colProtocol.setCellValueFactory(new PropertyValueFactory<>("protocol"));
@@ -56,39 +58,30 @@ public class MainController {
         colDest.setCellValueFactory(new PropertyValueFactory<>("destIp"));
         colPort.setCellValueFactory(new PropertyValueFactory<>("destPort"));
 
-        // 2. Setup UI Components
         comboSimProtocol.setItems(FXCollections.observableArrayList("TCP", "UDP", "ICMP", "ANY"));
         comboSimProtocol.getSelectionModel().select("ANY");
         ruleTable.setItems(ruleList);
 
-        // 3. Draw Topology (After layout is calculated)
         Platform.runLater(this::drawTopology);
-
         loadRulesFromDatabase();
     }
 
-    /**
-     * 2.2.1: Draws the Source, Router, and Destination visually
-     */
     private void drawTopology() {
         topoPane.getChildren().clear();
         double width = topoPane.getWidth();
         double height = topoPane.getHeight();
         double centerY = height / 2 - 10;
 
-        // Draw the connecting "cable"
         Line cable = new Line(100, centerY, width - 100, centerY);
         cable.setStroke(Color.LIGHTGRAY);
         cable.setStrokeWidth(4);
         cable.getStrokeDashArray().addAll(10d, 10d);
         topoPane.getChildren().add(cable);
 
-        // Draw Devices
         drawDevice(100, centerY, "SOURCE PC", Color.web("#3498db"));
         drawDevice(width / 2, centerY, "ROUTER", Color.web("#34495e"));
         drawDevice(width - 100, centerY, "DEST SERVER", Color.web("#2ecc71"));
 
-        // Prepare the animated packet node (initially hidden)
         packetNode = new Circle(10, Color.YELLOW);
         packetNode.setStroke(Color.BLACK);
         packetNode.setVisible(false);
@@ -99,25 +92,19 @@ public class MainController {
         Circle circle = new Circle(x, y, 25, color);
         circle.setStroke(Color.DARKSLATEGRAY);
         circle.setStrokeWidth(2);
-        
         Text text = new Text(name);
         text.setX(x - 35);
         text.setY(y + 45);
         text.setStyle("-fx-font-weight: bold; -fx-font-size: 11px; -fx-fill: #2c3e50;");
-        
         topoPane.getChildren().addAll(circle, text);
     }
 
-    /**
-     * 2.2.2: Animates the packet movement based on Permit/Deny
-     */
     private void animatePacket(boolean isPermitted) {
         double startX = 100;
         double routerX = topoPane.getWidth() / 2;
         double endX = topoPane.getWidth() - 100;
         double centerY = topoPane.getHeight() / 2 - 10;
 
-        // Reset
         packetNode.setTranslateX(0);
         packetNode.setCenterX(startX);
         packetNode.setCenterY(centerY);
@@ -125,18 +112,14 @@ public class MainController {
         packetNode.setOpacity(1.0);
         packetNode.setVisible(true);
 
-        // Move to Router
         TranslateTransition toRouter = new TranslateTransition(Duration.seconds(1.2), packetNode);
         toRouter.setToX(routerX - startX);
 
         if (isPermitted) {
-            // Continue to Destination
             TranslateTransition toDest = new TranslateTransition(Duration.seconds(1.2), packetNode);
             toDest.setToX(endX - startX);
-            SequentialTransition seq = new SequentialTransition(toRouter, toDest);
-            seq.play();
+            new SequentialTransition(toRouter, toDest).play();
         } else {
-            // Shake and vanish at Router
             toRouter.setOnFinished(e -> {
                 TranslateTransition shake = new TranslateTransition(Duration.seconds(0.1), packetNode);
                 shake.setByX(5); shake.setAutoReverse(true); shake.setCycleCount(4);
@@ -191,6 +174,9 @@ public class MainController {
         } catch (IOException e) { e.printStackTrace(); }
     }
 
+    /**
+     * Updated for 2.3.1: Captures simulation results and persists them to SQLite.
+     */
     @FXML
     private void handleSimulate() {
         try {
@@ -206,19 +192,26 @@ public class MainController {
             Rule match = simulatorService.simulate(packet, ruleList);
 
             boolean permitted = (match != null && match.getAction().equals("PERMIT"));
+            String resultText;
+            Integer matchedRuleId = null;
 
             if (match != null) {
-                lblResult.setText("RESULT: " + match.getAction() + " (Rule #" + match.getPriority() + ")");
+                resultText = "RESULT: " + match.getAction() + " (Rule #" + match.getPriority() + ")";
+                lblResult.setText(resultText);
                 lblResult.setTextFill(permitted ? Color.valueOf("#2ecc71") : Color.valueOf("#ff7675"));
                 ruleTable.getSelectionModel().select(match);
                 ruleTable.scrollTo(match);
+                matchedRuleId = match.getId();
             } else {
-                lblResult.setText("RESULT: DENY (Implicit Deny)");
+                resultText = "RESULT: DENY (Implicit Deny)";
+                lblResult.setText(resultText);
                 lblResult.setTextFill(Color.valueOf("#fab1a0"));
                 ruleTable.getSelectionModel().clearSelection();
             }
 
-            // TRIGGER ANIMATION
+            // NEW FOR 2.3.1: Save this event to the history table
+            logDAO.saveLog(packet, resultText, matchedRuleId);
+
             animatePacket(permitted);
 
         } catch (NumberFormatException e) {
