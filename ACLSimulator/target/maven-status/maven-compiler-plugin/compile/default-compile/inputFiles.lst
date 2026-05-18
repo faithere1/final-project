@@ -6,6 +6,7 @@
 /Users/fatih/Desktop/ceit_courses/211_java/final-project/ACLSimulator/src/main/java/com/aclsim/database/RuleDAO.java
 /Users/fatih/Desktop/ceit_courses/211_java/final-project/ACLSimulator/src/main/java/com/aclsim/model/Packet.java
 /Users/fatih/Desktop/ceit_courses/211_java/final-project/ACLSimulator/src/main/java/com/aclsim/model/Rule.java
+/Users/fatih/Desktop/ceit_courses/211_java/final-project/ACLSimulator/src/main/java/com/aclsim/service/BatchSimulatorService.java
 /Users/fatih/Desktop/ceit_courses/211_java/final-project/ACLSimulator/src/main/java/com/aclsim/service/CiscoGeneratorService.java
 /Users/fatih/Desktop/ceit_courses/211_java/final-project/ACLSimulator/src/main/java/com/aclsim/service/FileService.java
 /Users/fatih/Desktop/ceit_courses/211_java/final-project/ACLSimulator/src/main/java/com/aclsim/service/NetworkUtils.java

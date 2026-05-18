@@ -4,6 +4,7 @@ import com.aclsim.database.LogDAO;
 import com.aclsim.database.RuleDAO;
 import com.aclsim.model.Packet;
 import com.aclsim.model.Rule;
+import com.aclsim.service.BatchSimulatorService;
 import com.aclsim.service.CiscoGeneratorService;
 import com.aclsim.service.FileService;
 import com.aclsim.service.SimulatorService;
@@ -53,6 +54,7 @@ public class MainController {
     private LogDAO logDAO = new LogDAO();
     private FileService fileService = new FileService();
     private CiscoGeneratorService ciscoService = new CiscoGeneratorService();
+    private BatchSimulatorService batchService = new BatchSimulatorService(); // NEW FOR 2.3.4
 
     @FXML
     public void initialize() {
@@ -67,6 +69,7 @@ public class MainController {
         comboSimProtocol.getSelectionModel().select("ANY");
         ruleTable.setItems(ruleList);
 
+        // Listen for width and height changes to redraw the topology automatically (Bug fix)
         topoPane.widthProperty().addListener((obs, oldVal, newVal) -> drawTopology());
         topoPane.heightProperty().addListener((obs, oldVal, newVal) -> drawTopology());
 
@@ -74,14 +77,78 @@ public class MainController {
         loadRulesFromDatabase();
     }
 
-    // FIXED handleAddRule Logic
+    private void loadRulesFromDatabase() {
+        ruleList.clear();
+        ruleList.addAll(ruleDAO.getAllRules());
+    }
+
+    // --- SECTION 2.3.4: BATCH TESTING ---
+
+    @FXML
+    private void handleBatchTest() {
+        FileChooser fc = new FileChooser();
+        fc.setTitle("Open Packet List for Batch Test");
+        fc.getExtensionFilters().add(new FileChooser.ExtensionFilter("Text/CSV Files", "*.txt", "*.csv"));
+        
+        File file = fc.showOpenDialog(ruleTable.getScene().getWindow());
+        
+        if (file != null) {
+            try {
+                // 1. Import packets from file
+                List<Packet> packets = fileService.importPackets(file);
+                
+                // 2. Run simulation on all packets
+                String report = batchService.runBatch(packets, ruleList, simulatorService);
+                
+                // 3. Display the formatted report
+                Alert alert = new Alert(Alert.AlertType.INFORMATION);
+                alert.setTitle("Batch Simulation Results");
+                alert.setHeaderText("Packet Processing Report");
+                
+                TextArea textArea = new TextArea(report);
+                textArea.setEditable(false);
+                textArea.setPrefSize(700, 500);
+                textArea.setStyle("-fx-font-family: 'Monospaced'; -fx-font-size: 12px;");
+                
+                alert.getDialogPane().setContent(textArea);
+                alert.showAndWait();
+                
+            } catch (Exception e) {
+                showAlert("Batch Test Error", "Failed to process file: " + e.getMessage(), Alert.AlertType.ERROR);
+            }
+        }
+    }
+
+    // --- SECTION 2.3.3: CISCO GENERATOR ---
+
+    @FXML
+    private void handleGenerateCisco() {
+        if (ruleList.isEmpty()) {
+            showAlert("Warning", "No rules found to generate config.", Alert.AlertType.WARNING);
+            return;
+        }
+        String ciscoConfig = ciscoService.generateConfig(ruleList);
+        Alert alert = new Alert(Alert.AlertType.INFORMATION);
+        alert.setTitle("Cisco IOS Configuration");
+        alert.setHeaderText("Generated Access-List Commands");
+
+        TextArea textArea = new TextArea(ciscoConfig);
+        textArea.setEditable(false);
+        textArea.setPrefSize(600, 400);
+        textArea.setStyle("-fx-font-family: 'Monospaced'; -fx-font-size: 13px;");
+        
+        alert.getDialogPane().setContent(textArea);
+        alert.showAndWait();
+    }
+
+    // --- RULE MANAGEMENT (CRUD) ---
+
     @FXML 
     private void handleAddRule() {
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/aclsim/add_rule_dialog.fxml"));
             Parent root = loader.load();
-            
-            AddRuleController controller = loader.getController(); // Get controller instance
+            AddRuleController controller = loader.getController();
             
             Stage stage = new Stage();
             stage.setTitle("Add New Rule");
@@ -89,15 +156,12 @@ public class MainController {
             stage.setScene(new Scene(root));
             stage.showAndWait(); 
 
-            // GET THE RULE AND SAVE IT
             Rule newRule = controller.getCreatedRule();
             if (newRule != null) {
-                ruleDAO.addRule(newRule); // SAVE TO DATABASE
-                loadRulesFromDatabase();  // REFRESH TABLE
+                ruleDAO.addRule(newRule);
+                loadRulesFromDatabase();
             }
-        } catch (IOException e) { 
-            e.printStackTrace(); 
-        }
+        } catch (IOException e) { e.printStackTrace(); }
     }
 
     @FXML 
@@ -126,25 +190,24 @@ public class MainController {
         } catch (IOException e) { e.printStackTrace(); }
     }
 
-    @FXML
-    private void handleGenerateCisco() {
-        if (ruleList.isEmpty()) return;
-        String ciscoConfig = ciscoService.generateConfig(ruleList);
-        Alert alert = new Alert(Alert.AlertType.INFORMATION);
-        alert.setTitle("Cisco Configuration");
-        TextArea textArea = new TextArea(ciscoConfig);
-        textArea.setEditable(false);
-        textArea.setStyle("-fx-font-family: 'Monospaced';");
-        alert.getDialogPane().setContent(textArea);
-        alert.showAndWait();
+    @FXML private void handleDeleteRule() {
+        Rule selected = ruleTable.getSelectionModel().getSelectedItem();
+        if (selected != null) {
+            ruleDAO.deleteRule(selected.getId());
+            loadRulesFromDatabase();
+        }
     }
 
-    private void loadRulesFromDatabase() {
-        ruleList.clear();
-        ruleList.addAll(ruleDAO.getAllRules());
+    @FXML private void handleClearAll() {
+        Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+        alert.setContentText("Delete all rules permanently?");
+        if (alert.showAndWait().get() == ButtonType.OK) {
+            for (Rule r : ruleList) ruleDAO.deleteRule(r.getId());
+            loadRulesFromDatabase();
+        }
     }
 
-    // --- OTHER HANDLERS AND ANIMATIONS ---
+    // --- SIMULATION & ANIMATION ---
     
     @FXML
     private void handleSimulate() {
@@ -201,6 +264,7 @@ public class MainController {
         Circle circle = new Circle(x, y, 25, color);
         Text text = new Text(name);
         text.setX(x - 35); text.setY(y + 45);
+        text.setStyle("-fx-font-weight: bold; -fx-fill: #2c3e50;");
         topoPane.getChildren().addAll(circle, text);
     }
 
@@ -225,6 +289,8 @@ public class MainController {
         }
     }
 
+    // --- DATA EXPORT/IMPORT & HISTORY ---
+
     @FXML private void handleExportCSV() {
         FileChooser fc = new FileChooser();
         File file = fc.showSaveDialog(ruleTable.getScene().getWindow());
@@ -246,29 +312,15 @@ public class MainController {
     }
 
     @FXML private void handleViewHistory() {
-        String data = logDAO.getFormattedLogs(20);
+        String data = logDAO.getFormattedLogs(25);
         Alert alert = new Alert(Alert.AlertType.INFORMATION);
+        alert.setTitle("Audit Logs");
         TextArea area = new TextArea(data);
         area.setEditable(false);
+        area.setPrefSize(700, 400);
+        area.setStyle("-fx-font-family: 'Monospaced';");
         alert.getDialogPane().setContent(area);
         alert.show();
-    }
-
-    @FXML private void handleDeleteRule() {
-        Rule selected = ruleTable.getSelectionModel().getSelectedItem();
-        if (selected != null) {
-            ruleDAO.deleteRule(selected.getId());
-            loadRulesFromDatabase();
-        }
-    }
-
-    @FXML private void handleClearAll() {
-        Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
-        alert.setContentText("Delete all rules?");
-        if (alert.showAndWait().get() == ButtonType.OK) {
-            for (Rule r : ruleList) ruleDAO.deleteRule(r.getId());
-            loadRulesFromDatabase();
-        }
     }
 
     private void showAlert(String title, String content, Alert.AlertType type) {

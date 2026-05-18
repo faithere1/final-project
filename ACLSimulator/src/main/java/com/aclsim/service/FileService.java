@@ -1,5 +1,6 @@
 package com.aclsim.service;
 
+import com.aclsim.model.Packet;
 import com.aclsim.model.Rule;
 import java.io.*;
 import java.util.ArrayList;
@@ -34,9 +35,8 @@ public class FileService {
         List<Rule> importedRules = new ArrayList<>();
         
         try (Scanner scanner = new Scanner(file)) {
-            // Skip the header row
             if (scanner.hasNextLine()) {
-                scanner.nextLine();
+                scanner.nextLine(); // Skip header
             }
 
             while (scanner.hasNextLine()) {
@@ -45,20 +45,50 @@ public class FileService {
 
                 String[] p = line.split(",");
                 if (p.length >= 6) {
-                    // Create rule (ID is 0 because DB will assign a new one)
                     Rule rule = new Rule(
                         0,
-                        Integer.parseInt(p[0].trim()), // Priority
-                        p[1].trim(),                   // Action
-                        p[2].trim(),                   // Protocol
-                        p[3].trim(),                   // Source IP
-                        p[4].trim(),                   // Dest IP
-                        p[5].trim()                    // Port
+                        Integer.parseInt(p[0].trim()),
+                        p[1].trim(),
+                        p[2].trim(),
+                        p[3].trim(),
+                        p[4].trim(),
+                        p[5].trim()
                     );
                     importedRules.add(rule);
                 }
             }
         }
         return importedRules;
+    }
+
+    /**
+     * NEW FOR 2.3.4: Reads a file of test packets for batch simulation.
+     * Expected format: srcIp, destIp, protocol, portOrType
+     * Example: 1.1.1.1, 8.8.8.8, TCP, 80
+     */
+    public List<Packet> importPackets(File file) throws Exception {
+        List<Packet> packets = new ArrayList<>();
+        
+        try (Scanner scanner = new Scanner(file)) {
+            while (scanner.hasNextLine()) {
+                String line = scanner.nextLine();
+                if (line.trim().isEmpty() || line.startsWith("#")) continue;
+
+                String[] p = line.split(",");
+                if (p.length >= 4) {
+                    String src = p[0].trim();
+                    String dest = p[1].trim();
+                    String proto = p[2].trim();
+                    int portVal = Integer.parseInt(p[3].trim());
+
+                    // Logic from 2.1.5: Treat portVal as ICMP Type if protocol is ICMP
+                    int destPort = proto.equalsIgnoreCase("ICMP") ? -1 : portVal;
+                    int icmpType = proto.equalsIgnoreCase("ICMP") ? portVal : -1;
+
+                    packets.add(new Packet(src, dest, proto, destPort, icmpType));
+                }
+            }
+        }
+        return packets;
     }
 }
