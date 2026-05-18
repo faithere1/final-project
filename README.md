@@ -4,4 +4,12 @@
 
 **Current process**
 * v1.0 all compeleted.
-* v2.0 planned.
+* v2.0 all completed.
+
+
+
+**Current app main screen**
+
+* All buttons are functional.
+
+![alt text](image.png)
