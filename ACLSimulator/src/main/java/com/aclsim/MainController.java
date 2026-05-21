@@ -8,6 +8,11 @@ import com.aclsim.service.BatchSimulatorService;
 import com.aclsim.service.CiscoGeneratorService;
 import com.aclsim.service.FileService;
 import com.aclsim.service.SimulatorService;
+import com.aclsim.service.LabDatabase;
+import com.aclsim.service.GradingService;
+import com.aclsim.model.LabScenario;
+import com.aclsim.model.GradingResult;
+
 import javafx.animation.*;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
@@ -20,6 +25,7 @@ import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.input.*;
 import javafx.scene.layout.Pane;
+import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.*;
 import javafx.scene.text.Text;
@@ -46,8 +52,17 @@ public class MainController {
     @FXML private ComboBox<String> comboSimProtocol;
     @FXML private Label lblResult;
 
+
     @FXML private Pane topoPane;
     private Circle packetNode;
+
+    //FXML Academy components (3.3)
+    @FXML private ToggleButton btnToggleAcademy;
+    @FXML private VBox academyPane;
+    @FXML private ComboBox<String> comboActiveLab;
+    @FXML private TextArea txtLabDescription;
+
+
 
     private ObservableList<Rule> ruleList = FXCollections.observableArrayList();
     private SimulatorService simulatorService = new SimulatorService();
@@ -56,6 +71,10 @@ public class MainController {
     private FileService fileService = new FileService();
     private CiscoGeneratorService ciscoService = new CiscoGeneratorService();
     private BatchSimulatorService batchService = new BatchSimulatorService();
+
+    //Academy Services(3.2 & 3.3)
+    private GradingService gradingService = new com.aclsim.service.GradingService();
+    private LabScenario activateScenario = null;
 
     @FXML
     public void initialize() {
@@ -77,9 +96,78 @@ public class MainController {
         // 2.4.1: Setup Drag and Drop logic
         setupDragAndDrop();
 
+        //3.3.1: Setup the Labs ComboBox
+        setupAcademyLabs();
+
         Platform.runLater(this::drawTopology);
         loadRulesFromDatabase();
     }
+
+
+    // --- ACADEMY METHODS (3.3) ---
+    private void setupAcademyLabs(){
+        ObservableList<String> labTitles = FXCollections.observableArrayList();
+        for (com.aclsim.model.LabScenario scenario : com.aclsim.service.LabDatabase.getAllScenarios()) {
+            labTitles.add(scenario.getTitle());
+        }
+        comboActiveLab.setItems(labTitles);
+        comboActiveLab.getSelectionModel().selectFirst();
+        handleLabSelection(); //Load level 1 instructions automatically
+    }
+
+    /**
+     * 3.3.1: Toggles the visibility and spacing allocation of the Academy sidebar.
+     */
+    @FXML
+    private void handleToggleAcademy(){
+        boolean active = btnToggleAcademy.isSelected();
+        academyPane.setVisible(active);
+        academyPane.setManaged(active); // Tells layout engine to adjust main window spacing
+    }
+
+    /**
+     * 3.3.1: Triggered when a student selects a different level in the dropdown.
+     */
+    @FXML
+    private void handleLabSelection(){
+        int selectedIndex = comboActiveLab.getSelectionModel().getSelectedIndex();
+        if (selectedIndex >= 0) {
+            activateScenario = com.aclsim.service.LabDatabase.getAllScenarios().get(selectedIndex);
+            txtLabDescription.setText(activateScenario.getDescription());
+        }
+    }
+
+    /**
+     * 3.3.2: Evaluates the student's table rules against the scenario constraints.
+     */
+    @FXML
+    private void handleSubmitLab(){
+        if (activateScenario == null) return;
+
+        // Run the Auto-Grader!
+        com.aclsim.model.GradingResult result = gradingService.gradeLab(activateScenario, ruleList);
+
+        //Display result in a sleek modal
+        Alert alert = new Alert(result.isPassed() ? Alert.AlertType.INFORMATION : Alert.AlertType.WARNING);
+        alert.setTitle("Grade Report");
+        alert.setHeaderText(result.isPassed() ? "MISSION ACCOMPLISHED! 🎉" : "MISSION FAILED. ❌");
+
+        TextArea reportArea = new TextArea(result.getFeedbackDetails());
+        reportArea.setEditable(false);
+        reportArea.setPrefSize(500, 300);
+        reportArea.setStyle("-fx-font-family: 'Monospaced';");
+
+        if(!result.isPassed()) {
+            //Display the intelligent hint if they failed(3.4.1)
+            reportArea.appendText("\n" + "-".repeat(50) + "\n" + result.getHint());
+        }
+
+        alert.getDialogPane().setContent(reportArea);
+        alert.showAndWait();
+    }
+
+
+
 
     /**
      * 2.4.1: Row factory implementation for Drag-and-Drop support.

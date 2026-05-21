@@ -1,13 +1,17 @@
+com/aclsim/service/GradingService.class
 com/aclsim/service/CiscoGeneratorService.class
 com/aclsim/model/Rule.class
 com/aclsim/model/Packet.class
 com/aclsim/database/LogDAO.class
 com/aclsim/service/SimulatorService.class
+com/aclsim/model/GradingResult.class
 com/aclsim/service/FileService.class
+com/aclsim/model/LabScenario.class
 com/aclsim/service/NetworkUtils.class
 com/aclsim/database/RuleDAO.class
 module-info.class
 com/aclsim/AddRuleController.class
+com/aclsim/service/LabDatabase.class
 com/aclsim/service/BatchSimulatorService.class
 com/aclsim/MainController.class
 com/aclsim/MainApp.class
