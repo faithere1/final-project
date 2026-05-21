@@ -91,7 +91,6 @@
     -fx-effect: dropshadow(three-pass-box, rgba(231, 76, 60, 0.2), 5, 0, 0, 0);
 }
 
-/* Success State: Clean green border and soft green background */
 .field-success {
     -fx-border-color: #2ecc71 !important;
     -fx-border-width: 2px !important;
@@ -105,13 +104,85 @@
     -fx-effect: dropshadow(three-pass-box, rgba(52, 152, 219, 0.3), 5, 0, 0, 0);
 }
 
-/* Academy Sidebar style enhancements (3.3)*/
-#academyPane{
-    -fx-background-color: #2c3e50;
+#academyPane {
+    -fx-background-color: linear-gradient(to bottom, #2c3e50, #1a252f);
     -fx-border-color: #1e272e;
+    -fx-border-width: 0 0 0 3;
+    -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.4), 15, 0, -5, 0);
 }
 
 #txtLabDescription {
-    -fx-control-inner-background: #34495e !important;
-    -fx-text-fill: #ffff !important;
+    -fx-control-inner-background: #151e27 !important; /* Çok daha koyu bir iç plan */
+    -fx-background-color: transparent;
+    -fx-text-fill: #2ecc71 !important; /* Görev metinleri için hacker yeşili (veya #ecf0f1 ile beyaz yapabilirsin) */
+    -fx-border-color: #34495e;
+    -fx-border-radius: 6;
+    -fx-background-radius: 6;
+    -fx-padding: 8;
+    -fx-font-family: "Consolas", monospace; /* Terminal / Görev fontu */
+    -fx-font-size: 13px;
+}
+
+
+#txtLabDescription:focused {
+    -fx-border-color: #e67e22; 
+    -fx-effect: dropshadow(three-pass-box, rgba(230, 126, 34, 0.4), 8, 0, 0, 0);
+}
+
+#txtLabDescription .scroll-bar:vertical {
+    -fx-background-color: #151e27;
+}
+#txtLabDescription .scroll-bar:vertical .thumb {
+    -fx-background-color: #34495e;
+    -fx-background-radius: 3;
+}
+
+#comboActiveLab {
+    -fx-background-color: #34495e;
+    -fx-text-fill: white;
+    -fx-border-color: #2c3e50;
+    -fx-border-radius: 5;
+    -fx-background-radius: 5;
+    -fx-font-weight: bold;
+    -fx-padding: 2;
+    -fx-cursor: hand;
+}
+
+#comboActiveLab .list-cell {
+    -fx-text-fill: white;
+    -fx-background-color: transparent;
+}
+
+#comboActiveLab .arrow-button {
+    -fx-background-color: transparent;
+}
+
+#comboActiveLab .arrow {
+    -fx-background-color: #ecf0f1;
+}
+
+#comboActiveLab:hover {
+    -fx-background-color: #3e566e;
+}
+#comboActiveLab .combo-box-popup .list-view {
+    -fx-background-color: #34495e; /* Koyu lacivert/gri */
+    -fx-border-color: #1e272e;
+    -fx-border-width: 1px;
+}
+
+#comboActiveLab .combo-box-popup .list-view .list-cell {
+    -fx-text-fill: white !important; /* Yazı rengi beyaz */
+    -fx-background-color: #34495e;   /* Arka plan koyu */
+    -fx-padding: 8px;                /* Biraz boşluk verelim sıkışık durmasın */
+    -fx-cursor: hand;
+}
+
+#comboActiveLab .combo-box-popup .list-view .list-cell:filled:hover {
+    -fx-background-color: #2980b9; /* Canlı mavi ile vurgula */
+    -fx-text-fill: white !important;
+}
+
+#comboActiveLab .combo-box-popup .list-view .list-cell:filled:selected {
+    -fx-background-color: #e67e22; /* Turuncu renkte kalsın ki seçili olduğu belli olsun */
+    -fx-text-fill: white !important;
 }
