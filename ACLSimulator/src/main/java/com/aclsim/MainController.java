@@ -166,6 +166,31 @@ public class MainController {
         alert.showAndWait();
     }
 
+    /**
+     * 3.4.3: Automatically populates the Packet Simulator field with a sample packet from the active Lab Scenario for manual debugging.
+     */
+
+    @FXML
+    private void handleAutoFillPacket() {
+        if (activateScenario == null || activateScenario.getTestPackets().isEmpty()){
+            showAlert("No Active Lab", "Please select a valid lab level first.", Alert.AlertType.WARNING);
+            return;
+        }
+        Packet samplePacket = activateScenario.getTestPackets().get(0);
+
+        txtSimSource.setText(samplePacket.getSourceIp());
+        txtSimDest.setText(samplePacket.getDestIp());
+        comboSimProtocol.setValue(samplePacket.getProtocol().toUpperCase());
+
+        if (samplePacket.getProtocol().equalsIgnoreCase("ICMP")){
+            txtSimPort.setText(String.valueOf(samplePacket.getIcmpType()));
+        } else {
+            txtSimPort.setText(samplePacket.getDestPort() == -1 ? "ANY" : String.valueOf(samplePacket.getDestPort()));
+        }
+
+        System.out.println("LOG: Populated simulator fields with sample packet from " + activateScenario.getTitle());
+    }
+
 
 
 

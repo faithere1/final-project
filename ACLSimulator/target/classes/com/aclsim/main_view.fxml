@@ -103,6 +103,9 @@
 
             <!-- Action Area -->
             <VBox spacing="10" alignment="CENTER">
+
+                <Button text="Auto-Fill Test Packet" onAction="#handleAutoFillPacket" maxWidth="Infinity" 
+                        style="-fx-background-color: #34495e; -fx-text-fill: white; -fx-font-weight:bold; -fx-cursor: hand;"/>
                 <Button text="SUBMIT FOR GRADING" onAction="#handleSubmitLab" maxWidth="Infinity" prefHeight="45"
                         style="-fx-background-color: #e67e22; -fx-text-fill: white; -fx-font-size: 14px; -fx-font-weight: bold; -fx-cursor: hand;"/>
             </VBox>
