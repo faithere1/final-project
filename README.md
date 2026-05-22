@@ -14,3 +14,8 @@
 * All buttons are functional.
 
 ![alt text](image.png)
+
+
+* Academy update!
+
+![alt text](image-1.png)
