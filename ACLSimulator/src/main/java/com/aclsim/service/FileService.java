@@ -103,18 +103,22 @@ public class FileService {
                 writer.println("=================================================================================");
                 writer.println("                     ACL SIMULATOR - ACADEMIC AUDIT REPORT                       ");
                 writer.println("=================================================================================");
-                writer.println("Generated on: " + java.time.LocalDateTime.now().format(java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
+                writer.println("                       Generated on: " + java.time.LocalDateTime.now().format(java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
                 writer.println("=================================================================================");
+                writer.println();
+                writer.println();
                 writer.println();
 
                 //1.Progress Overview
-                writer.println("---1.ACADEMY PROGRESS SUMMARY---");
+                writer.println("---------------/ ACADEMY PROGRESS SUMMARY /---------------");
+                writer.println();
+                writer.println();
                 int totalCompleted= progressDAO.getCompletedCount();
                 int totalLabs = scenarios.size();
                 double completionRate = ((double) totalCompleted / totalLabs) * 100.0;
                 writer.printf("Total Labs Completed: %d of %d (%.1f%%)%n%n", totalCompleted, totalLabs, completionRate);
 
-                writer.printf("%-5s | %-25s | %-12s | %-8s&n", "ID", "Scenario Name", "Status", "Attempts");
+                writer.printf("%-5s | %-25s | %-12s | %-8s%n", "ID", "Scenario Name", "Status", "Attempts");
                 writer.println("-".repeat(59));
                 for (com.aclsim.model.LabScenario s : scenarios){
                     boolean isDone = progressDAO.isLabCompleted(s.getLevelId());
@@ -122,9 +126,14 @@ public class FileService {
                     writer.printf("%-5d | %-25s | %-12s | %-8d%n", s.getLevelId(), s.getTitle(), isDone ? "COMPLETED ✅" : "INCOMPLETE ❌", attempts);
                 }
                 writer.println();
+                writer.println();
+                writer.println();
+                writer.println();
 
                 //2.Current Rules Configuration
-                writer.println("---2.CURRENT RUNNING SECURITY POLICY (ACL)---");
+                writer.println("---------------/ CURRENT RUNNING SECURITY POLICY (ACL) /---------------");
+                writer.println();
+                writer.println();
                 if (currentRules.isEmpty()){
                     writer.println("[No active rules currently configured on the router.]");
                 } else {
@@ -136,10 +145,18 @@ public class FileService {
                     }
                 }
                 writer.println();
+                writer.println();
+                writer.println();
+                writer.println();
 
                 //3.History Logs
-                writer.println("---3.LIVE SIMULATION HISTORY LOGS---");
+                writer.println("---------------/ LIVE SIMULATION HISTORY LOGS /---------------");
+                writer.println();
+                writer.println();
                 writer.println(formattedLogs);
+                writer.println();
+
+                writer.println();
                 writer.println();
 
                 writer.println("=================================================================================");
