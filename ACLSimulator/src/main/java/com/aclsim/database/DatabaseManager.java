@@ -40,14 +40,24 @@ public class DatabaseManager {
             );
             """;
 
+        // NEW FOR 3.4.2: Progress Tracking Table
+        String createProgressTable ="""
+                CREATE TABLE IF NOT EXISTS user_progress(
+                    lab_id INTEGER PRIMARY KEY,
+                    completed INTEGER DEFAULT 0,
+                    attempts INTEGER DEFAULT 0
+                );
+                """;
+
         try (Connection conn = getConnection();
              Statement stmt = conn.createStatement()) {
             
             // Execute both table creations
             stmt.execute(createRulesTable);
             stmt.execute(createLogsTable);
+            stmt.execute(createProgressTable); // Initialize the progress table
             
-            System.out.println(">>> Database initialized: Rules and Logs tables are ready.");
+            System.out.println(">>> Database initialized with Rules, Logs, and Progress tracking.");
         } catch (SQLException e) {
             System.err.println(">>> Database initialization error: " + e.getMessage());
         }

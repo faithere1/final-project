@@ -76,6 +76,9 @@ public class MainController {
     private GradingService gradingService = new com.aclsim.service.GradingService();
     private LabScenario activateScenario = null;
 
+    //lab progress(3.4.2)
+    private com.aclsim.database.ProgressDAO progressDAO = new com.aclsim.database.ProgressDAO();
+
     @FXML
     public void initialize() {
         colPriority.setCellValueFactory(new PropertyValueFactory<>("priority"));
@@ -144,27 +147,56 @@ public class MainController {
     private void handleSubmitLab(){
         if (activateScenario == null) return;
 
-        // Run the Auto-Grader!
-        com.aclsim.model.GradingResult result = gradingService.gradeLab(activateScenario, ruleList);
+        int labId = activateScenario.getLevelId();
 
-        //Display result in a sleek modal
+        //1.Increment attempts immediately in database
+        progressDAO.incrementAttempt(labId);
+
+        //2.Grade the lab
+        GradingResult result = gradingService.gradeLab(activateScenario, ruleList);
+
+        //3. IF passed, mark as complete in DB
+        if(result.isPassed()){
+            progressDAO.markAsCompleted(labId);
+        }
+
+        //4.Fetch updated progress values for the report card 
+        int attempts = progressDAO.getAttempts(labId);
+        int totalCompleted = progressDAO.getCompletedCount();
+        int totalLabs = com.aclsim.service.LabDatabase.getAllScenarios().size();
+
+        //5.Build Report Card Dialog
         Alert alert = new Alert(result.isPassed() ? Alert.AlertType.INFORMATION : Alert.AlertType.WARNING);
-        alert.setTitle("Grade Report");
-        alert.setHeaderText(result.isPassed() ? "MISSION ACCOMPLISHED! 🎉" : "MISSION FAILED. ❌");
+        alert.setTitle("LMS Grader Report Card");
+        alert.setHeaderText(result.isPassed() ? "MISSION ACCOMPLISHED! 🎓" : "MISSION FAILED! ❌");
 
-        TextArea reportArea = new TextArea(result.getFeedbackDetails());
+        //Format a beautiful dashboard-style report card
+        StringBuilder reportCard = new StringBuilder();
+
+        reportCard.append("==================================================\n");
+        reportCard.append("              ACADEMY ACADEMIC REPORT             \n");
+
+        reportCard.append("==================================================\n");
+        reportCard.append(String.format(" Lab Target: %s%n", activateScenario.getTitle()));
+        reportCard.append(String.format(" Attempts Made: %d%n", attempts));
+        reportCard.append(String.format(" Progress: %d of %d Labs Completed%n", totalCompleted, totalLabs));
+
+        reportCard.append("==================================================\n\n");
+        reportCard.append(result.getFeedbackDetails());
+
+        TextArea reportArea = new TextArea(reportCard.toString());
         reportArea.setEditable(false);
-        reportArea.setPrefSize(500, 300);
-        reportArea.setStyle("-fx-font-family: 'Monospaced';");
+        reportArea.setPrefSize(550, 420);
+        reportArea.setStyle("-fx-font-family: 'Monospaced'; -fx-font-size: 12px;");
 
-        if(!result.isPassed()) {
-            //Display the intelligent hint if they failed(3.4.1)
-            reportArea.appendText("\n" + "-".repeat(50) + "\n" + result.getHint());
+        if(!result.isPassed()){
+            reportArea.appendText("\n" + "=".repeat(50) + "\n" + result.getHint());
         }
 
         alert.getDialogPane().setContent(reportArea);
         alert.showAndWait();
     }
+        
 
     /**
      * 3.4.3: Automatically populates the Packet Simulator field with a sample packet from the active Lab Scenario for manual debugging.
@@ -189,6 +221,26 @@ public class MainController {
         }
 
         System.out.println("LOG: Populated simulator fields with sample packet from " + activateScenario.getTitle());
+    }
+
+    @FXML
+    private void handleResetProgress(){
+        //Create the Confirmation Dialog
+        Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+        alert.setTitle("Reset Academy Progress");
+        alert.setHeaderText("Clear all academic statistics?");
+        alert.setContentText("This will permanently delete all your completed levels and attempt counts. Do you want to continue?");
+
+        //Wait for user input
+        Optional<ButtonType> result = alert.showAndWait();
+        if (result.isPresent() && result.get() == ButtonType.OK) {
+            progressDAO.clearAllProgress(); //Execute database delete
+            //Reload the active scenario description to reset any UI states
+
+            handleLabSelection();
+
+            showAlert("Progress Reset", "Your Academy stats have been cleared successfully.", Alert.AlertType.INFORMATION);
+        }
     }
 
 
