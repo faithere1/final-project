@@ -114,7 +114,7 @@ public class FileService {
                 double completionRate = ((double) totalCompleted / totalLabs) * 100.0;
                 writer.printf("Total Labs Completed: %d of %d (%.1f%%)%n%n", totalCompleted, totalLabs, completionRate);
 
-                writer.printf("%-5s | %-25s | %-12s | &-8s&n", "ID", "Scenario Name", "Status", "Attempts");
+                writer.printf("%-5s | %-25s | %-12s | %-8s&n", "ID", "Scenario Name", "Status", "Attempts");
                 writer.println("-".repeat(59));
                 for (com.aclsim.model.LabScenario s : scenarios){
                     boolean isDone = progressDAO.isLabCompleted(s.getLevelId());
