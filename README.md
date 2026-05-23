@@ -19,3 +19,7 @@
 * Academy update!
 
 ![alt text](image-1.png)
+
+* Grading and Lab Competion Report update!
+
+![alt text](image-2.png)
