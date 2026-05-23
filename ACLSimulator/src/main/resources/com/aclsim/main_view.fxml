@@ -103,7 +103,9 @@
 
             <!-- Action Area -->
             <VBox spacing="10" alignment="CENTER">
-
+                <!--3.4.4-unplanned: Save Progress Report-->
+                <Button text="Save Progress Report" onAction="#handleSaveProgressReport" maxWidth="Infinity"
+                        style="-fx-font-weight: bold; -fx-cursor: hand;"/>
                 <!--3.4.2: Reset Progress Button-->
                 <Button text="Reset Lab Progress" onAction="#handleResetProgress" maxWidth="Infinity" 
                         style="-fx-background-color: #7f8c8d; -fx-text-fill: white; -fx-font-weight: bold; -fx-cursor: hand;"/>

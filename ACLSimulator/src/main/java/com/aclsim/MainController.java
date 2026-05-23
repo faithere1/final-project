@@ -119,6 +119,43 @@ public class MainController {
     }
 
     /**
+     * 3.4.4-unplanned: Opens a file dialog to save a complete, structured progress and simulation report.
+     */
+
+    @FXML
+    private void handleSaveProgressReport(){
+        FileChooser fileChooser = new FileChooser();
+        fileChooser.setTitle("Save Academic Progress Report");
+        fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("TextFiles", ".txt"));
+
+        //Suggest a default timestamped filename
+        String timestamp = java.time.LocalDateTime.now().format(java.time.format.DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss"));
+
+        fileChooser.setInitialFileName("ACL_Progress_Report_" + timestamp + ".txt");
+
+        File file = fileChooser.showSaveDialog(ruleTable.getScene().getWindow());
+
+        if(file != null) {
+            try {
+                //Fetch latest database logs
+                String formattedLogs = logDAO.getFormattedLogs(50);
+
+                //Write report
+                fileService.generateProgressReport(file, ruleList, formattedLogs, com.aclsim.service.LabDatabase.getAllScenarios(), progressDAO);
+
+                showAlert("Report Saved", "Your academic audit report has been saved as:\n" + file.getName(), Alert.AlertType.INFORMATION);
+            } catch (Exception e) {
+                showAlert("Error Saving", "Could not write report file: " + e.getMessage(), Alert.AlertType.ERROR);
+                e.printStackTrace();
+            }
+        }
+    }
+
+
+
+
+
+    /**
      * 3.3.1: Toggles the visibility and spacing allocation of the Academy sidebar.
      */
     @FXML

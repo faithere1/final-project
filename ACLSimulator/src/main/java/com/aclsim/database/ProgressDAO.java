@@ -82,4 +82,22 @@ public class ProgressDAO{
             System.err.println("Database Error (clearAllProgress):" + e.getMessage());
         }
     }
+
+    /**
+     * 3.4.4-unplanned: Checks if a specific lab has been successfully passed.
+     */
+    public boolean isLabCompleted(int labId){
+        String sql ="SELECT completed FROM user_progress WHERE lab_id = ?";
+        try (Connection conn = DatabaseManager.getConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)){
+            pstmt.setInt(1, labId);
+            try (ResultSet rs = pstmt.executeQuery()){
+                if (rs.next()){
+                    return rs.getInt("completed")==1;
+                }
+            }
+        } catch (SQLException e){
+            System.err.println("Database Error (isLabCompleted):" + e.getMessage());
+        }
+        return false;
+    }
 }
