@@ -482,9 +482,11 @@ public class MainController {
 
     private void drawDevice(double x, double y, String name, Color color) {
         Circle circle = new Circle(x, y, 25, color);
+        circle.setStroke(Color.DARKSLATEGRAY);
+        circle.setStrokeWidth(2);
         Text text = new Text(name);
         text.setX(x - 35); text.setY(y + 45);
-        text.setStyle("-fx-font-weight: bold; -fx-fill: #2c3e50;");
+        text.setStyle("-fx-font-weight: bold; -fx-fill: #ffffff;");
         topoPane.getChildren().addAll(circle, text);
     }
 

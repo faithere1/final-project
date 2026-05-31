@@ -1,25 +1,23 @@
 /* --- 4.1.1: JAVAFX-COMPLIANT CSS LOOKUPS (VARIABLES) --- */
 .root {
-    /* Softened Slate-Blue Palette */
-    -fx-bg-dark: #1e293b;            /* Soft slate background */
-    -fx-bg-card: #243247;            /* Lighter slate-blue for cards and panels */
-    -fx-bg-header: #151d2a;          /* Rich deep slate for headers */
-    -fx-border-color-slate: #3b4b61; /* Steel-blue theme borders */
+    -fx-bg-dark: #1e293b;            
+    -fx-bg-card: #243247;            
+    -fx-bg-header: #151d2a;          
+    -fx-border-color-slate: #3b4b61; 
     
-    -fx-accent-teal: #06b6d4;        /* Vibrant neon-teal */
-    -fx-neon-green: #10b981;         /* Permit green */
-    -fx-neon-red: #ef4444;           /* Deny red */
-    -fx-neon-amber: #f59e0b;         /* Warning yellow */
+    -fx-accent-teal: #06b6d4;        
+    -fx-neon-green: #10b981;         
+    -fx-neon-red: #ef4444;           
+    -fx-neon-amber: #f59e0b;         
     
-    -fx-text-primary: #f1f5f9;       /* Soft white text */
-    -fx-text-secondary: #94a3b8;     /* Warm muted gray text */
+    -fx-text-primary: #f1f5f9;       
+    -fx-text-secondary: #94a3b8;     
 
     -fx-font-family: "Segoe UI", Helvetica, Arial, sans-serif;
     -fx-background-color: -fx-bg-dark;
 }
 
-/* --- 4.1.2: CARDS & GLASSMORPHIC DEPTH --- */
-
+/* --- CARDS & GLASSMORPHIC DEPTH --- */
 .header-section {
     -fx-background-color: -fx-bg-header;
     -fx-border-color: -fx-border-color-slate;
@@ -32,7 +30,6 @@
     -fx-border-width: 1 0 0 0;
 }
 
-/* Academy Sidebar (Panel Card) */
 #academyPane {
     -fx-background-color: -fx-bg-card;
     -fx-border-color: -fx-border-color-slate;
@@ -45,8 +42,7 @@
     -fx-text-fill: -fx-text-primary !important;
 }
 
-/* --- TABLE VIEW OVERHAUL (THEMED VERTICAL GRID LINES) --- */
-
+/* --- TABLE VIEW OVERHAUL (CENTERED & GRIDDED) --- */
 .table-view {
     -fx-background-color: -fx-bg-card;
     -fx-border-color: -fx-border-color-slate;
@@ -55,16 +51,13 @@
     -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.1), 8, 0, 0, 2);
 }
 
-/* Header strip background */
 .table-view .column-header-background {
     -fx-background-color: -fx-bg-header;
 }
 
-/* Table column headers */
 .table-view .column-header {
     -fx-background-color: -fx-bg-header;
     -fx-size: 38;
-    /* RESTORED: Right border is colored to match the theme */
     -fx-border-color: transparent -fx-border-color-slate -fx-border-color-slate transparent; 
     -fx-border-width: 0 1 1 0;
 }
@@ -73,9 +66,10 @@
     -fx-text-fill: -fx-text-secondary;
     -fx-font-weight: bold;
     -fx-font-size: 11px;
+    -fx-alignment: CENTER;
+    -fx-max-width: infinity;
 }
 
-/* Fills the empty corner space at the end of the header row */
 .table-view .column-header-background .filler,
 .table-view .corner {
     -fx-background-color: -fx-bg-header;
@@ -83,72 +77,131 @@
     -fx-border-width: 0 0 1 0;
 }
 
-/* RESTORED: Table cells have vertical grid lines colored in steel-blue */
 .table-cell {
+    -fx-font-family: "JetBrains Mono", "Consolas", "Menlo", "Monaco", "Courier New", monospace;
     -fx-text-fill: -fx-text-primary;
     -fx-font-size: 12px;
-    -fx-border-color: transparent -fx-border-color-slate transparent transparent; /* Vertical line on the right side of the cell */
+    -fx-border-color: transparent -fx-border-color-slate transparent transparent; 
     -fx-border-width: 0 1 0 0;
     -fx-padding: 0 10 0 10;
+    -fx-alignment: CENTER;
 }
 
-/* Table Rows horizontal lines */
 .table-row-cell {
     -fx-background-color: -fx-bg-card;
     -fx-cell-size: 34;
     -fx-border-color: -fx-border-color-slate;
-    -fx-border-width: 0 0 1 0; /* Horizontal line only on the bottom */
+    -fx-border-width: 0 0 1 0;
 }
 
-/* Alternating Row Zebra Striping */
 .table-row-cell:odd {
     -fx-background-color: #2a3a52; 
 }
 
-/* Selected Row Style */
 .table-view .table-row-cell:selected {
     -fx-background-color: rgba(6, 182, 212, 0.2) !important;
     -fx-border-color: -fx-accent-teal !important;
     -fx-border-width: 1px 0 1px 0 !important;
 }
 
-/* Selected text highlighted with teal */
 .table-view .table-row-cell:selected .table-cell {
     -fx-text-fill: -fx-accent-teal !important;
     -fx-font-weight: bold;
-    -fx-border-color: transparent -fx-border-color-slate transparent transparent; /* Keep the vertical lines visible when selected */
+    -fx-border-color: transparent -fx-border-color-slate transparent transparent;
 }
 
-/* Empty Table state placeholder */
 .table-view .placeholder .label {
     -fx-text-fill: -fx-text-secondary;
     -fx-font-size: 13px;
 }
 
-/* --- OTHER UI CONTROLS --- */
+/* --- COMBO BOX THEME OVERHAUL (4.1/4.2 Polish) --- */
+.combo-box {
+    -fx-background-color: -fx-bg-card;
+    -fx-border-color: -fx-border-color-slate;
+    -fx-border-radius: 6;
+    -fx-background-radius: 6;
+    -fx-padding: 2 4 2 4;
+}
 
-.button {
+/* Selected item display cell */
+.combo-box .cell {
+    -fx-text-fill: -fx-text-primary;
+    -fx-font-weight: bold;
+    -fx-font-size: 12px;
+}
+
+/* Stylize the dropdown arrow */
+.combo-box .arrow-button {
+    -fx-background-color: transparent;
+    -fx-background-radius: 0 6 6 0;
+}
+
+.combo-box .arrow {
+    -fx-background-color: -fx-text-secondary;
+}
+
+/* Dropdown list popup container */
+.combo-box-popup .list-view {
+    -fx-background-color: -fx-bg-header;
+    -fx-border-color: -fx-border-color-slate;
+    -fx-border-radius: 6;
+    -fx-background-radius: 6;
+    -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.4), 10, 0, 0, 4);
+}
+
+/* Dropdown list items */
+.combo-box-popup .list-cell {
+    -fx-background-color: -fx-bg-header;
+    -fx-text-fill: -fx-text-primary; /* Clean white level names */
+    -fx-padding: 8 12 8 12;
+    -fx-font-size: 12px;
+    -fx-font-weight: bold;
+}
+
+/* Hover & Selected states in dropdown */
+.combo-box-popup .list-cell:hover {
+    -fx-background-color: rgba(6, 182, 212, 0.2);
+    -fx-text-fill: -fx-accent-teal;
+}
+
+.combo-box-popup .list-cell:filled:selected {
+    -fx-background-color: rgba(6, 182, 212, 0.3) !important;
+    -fx-text-fill: -fx-accent-teal !important;
+}
+
+/* --- BUTTONS --- */
+.button, .toggle-button {
     -fx-cursor: hand;
     -fx-background-radius: 6;
     -fx-font-weight: bold;
     -fx-font-size: 12px;
     -fx-padding: 8 16 8 16;
-    -fx-text-fill: white;
+    -fx-text-fill: #f1f5f9;
     -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.15), 4, 0, 0, 1);
 }
 
-.button:hover {
-    -fx-opacity: 0.95;
+.button:hover, .toggle-button:hover {
+    -fx-opacity: 0.90;
     -fx-scale-x: 1.02;
     -fx-scale-y: 1.02;
 }
 
-.button:pressed {
-    -fx-scale-x: 0.98;
-    -fx-scale-y: 0.98;
+.btn-primary { -fx-background-color: #1e40af; }
+.btn-secondary { -fx-background-color: #334155; }
+.btn-danger { -fx-background-color: #991b1b; }
+.btn-success { -fx-background-color: #065f46; }
+
+.toggle-button { -fx-background-color: #334155; }
+.toggle-button:selected {
+    -fx-background-color: #0e7490;
+    -fx-border-color: -fx-accent-teal;
+    -fx-border-width: 1px;
 }
 
+/* --- COMPONENTS --- */
 .text-field {
+    -fx-font-family: "JetBrains Mono", "Consolas", "Menlo", "Monaco", "Courier New", monospace;
     -fx-background-color: -fx-bg-card;
     -fx-text-fill: -fx-text-primary;
     -fx-border-color: -fx-border-color-slate;
@@ -166,7 +219,6 @@
     -fx-text-fill: -fx-text-primary;
 }
 
-/* Terminal Console Style */
 #lblResult {
     -fx-font-family: "Consolas", "Monospaced", monospace;
     -fx-font-size: 20px;
@@ -181,15 +233,9 @@
     -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.4), 8, 0, 0, 3);
 }
 
-/* Dialog Box Overrides */
-.dialog-pane {
-    -fx-background-color: -fx-bg-card;
-}
-.dialog-pane .label {
-    -fx-text-fill: -fx-text-primary;
-}
+.dialog-pane { -fx-background-color: -fx-bg-card; }
+.dialog-pane .label { -fx-text-fill: -fx-text-primary; }
 
-/* Validation */
 .field-error {
     -fx-border-color: -fx-neon-red !important;
     -fx-border-width: 2px !important;
