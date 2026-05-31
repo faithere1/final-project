@@ -24,14 +24,19 @@ public class MainApp extends Application {
 
             // 3. Create the Scene with the loaded layout
             Scene scene = new Scene(root);
+
+            // ---FORCE LOAD THE CSS VIA CODE (Bypasses FXML path bugs)---
+            String cssPath = getClass().getResource("/com/aclsim/style.css").toExternalForm();
+            scene.getStylesheets().add(cssPath);
+            System.out.println(">>> Sentinel Theme Applied: " + cssPath);
             
             // 4. Configure and show the Stage (the window)
             primaryStage.setTitle("ACL Simulator Dashboard");
             primaryStage.setScene(scene);
             
             // Set a minimum size so the layout doesn't break
-            primaryStage.setMinWidth(800);
-            primaryStage.setMinHeight(600);
+            primaryStage.setMinWidth(1000);
+            primaryStage.setMinHeight(750);
             
             primaryStage.show();
             System.out.println(">>> ACL Simulator GUI started successfully.");
