@@ -6,6 +6,7 @@ module com.aclsim {
     // SQLite often doesn't have a formal module name, 
     // so we use its automatic name.
     requires org.xerial.sqlitejdbc;
+    requires java.desktop; // For Taskbar icon support
 
     opens com.aclsim to javafx.fxml, javafx.graphics;
     opens com.aclsim.model to javafx.base;

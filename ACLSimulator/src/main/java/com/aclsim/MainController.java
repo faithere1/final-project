@@ -38,6 +38,10 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
 
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
+import java.io.InputStream;
+
 public class MainController {
     
     @FXML private TableView<Rule> ruleTable;
@@ -471,13 +475,50 @@ public class MainController {
         cable.getStrokeDashArray().addAll(10d, 10d);
         topoPane.getChildren().add(cable);
 
-        drawDevice(100, centerY, "SOURCE PC", Color.web("#3498db"));
-        drawDevice(width / 2, centerY, "ROUTER", Color.web("#34495e"));
-        drawDevice(width - 100, centerY, "DEST SERVER", Color.web("#2ecc71"));
+        drawDevice(100, centerY, "SOURCE", Color.web("#3498db"));
+        //UPGRADED FOR 4.3.1: Draw Router with our Custom Logo Image.
+        drawRouterImage(width / 2, centerY);
+        drawDevice(width - 100, centerY, "DESTINATION", Color.web("#2ecc71"));
 
         packetNode = new Circle(10, Color.YELLOW);
+        packetNode.setStroke(Color.BLACK);
         packetNode.setVisible(false);
         topoPane.getChildren().add(packetNode);
+    }
+    /**
+     * 4.3.1 Helper: Renders our custom logo.png dynamically as the Router Node
+     */
+    private void drawRouterImage(double x, double y) {
+        try{
+            InputStream imgStream = getClass().getResourceAsStream("/com/aclsim/logo.png");
+            if(imgStream != null){
+                Image routerImg = new Image(imgStream);
+                ImageView imageView = new ImageView(routerImg);
+
+                //Scale the image (50x50 fits perfectly where the 25px radius circles are)
+                imageView.setFitWidth(100);
+                imageView.setFitHeight(100);
+
+                //Center the image exactly at(x,y)
+                imageView.setX(x-50);
+                imageView.setY(y-50);
+                imageView.setSmooth(true);
+
+                Text text = new Text("");
+                text.setX(x-25); //Centered text placement
+                text.setY(y+70);
+                text.setStyle("-fx-font-weight: bold; -fx-font-size: 12px; -fx-fill: #ffffff;");
+
+                topoPane.getChildren().addAll(imageView, text);
+                System.out.println(">>> Branded Router rendered on topology canvas.");
+            } else {
+                // Fallback to standart circle if image is missing
+                drawDevice(x,y, "ROUTER", Color.web("#34495e"));
+            }
+        } catch (Exception e){
+            //Fallback on error
+            drawDevice(x,y, "ROUTER", Color.web("#34495e"));
+        }
     }
 
     private void drawDevice(double x, double y, String name, Color color) {
