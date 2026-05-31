@@ -33,7 +33,7 @@ public class MainApp extends Application {
             String cssPath = getClass().getResource("/com/aclsim/style.css").toExternalForm();
             mainScene.getStylesheets().add(cssPath);
 
-            primaryStage.setTitle("ACL Simulator v4");
+            primaryStage.setTitle("ACL Simulator v4.4");
             primaryStage.setScene(mainScene);
             primaryStage.setMinWidth(1100);
             primaryStage.setMinHeight(750);
@@ -120,7 +120,7 @@ public class MainApp extends Application {
 
         // Typeset logs including final ASCII MOTD Shield Logo
         String[] logLines = {
-            "[BOOT] Sentinel Secure Engine v4.0.0... [OK]\n",
+            "[BOOT] Sentinel Secure Engine v4.0... [OK]\n",
             "[INIT] Connecting SQLite database... [OK]\n",
             "[RULES] Parsing extended rulesets... [OK]\n",
             "[ACADEMY] Mapping 8 scenario labs... [OK]\n",
@@ -133,7 +133,7 @@ public class MainApp extends Application {
             " \n",
             " \n",
             " \n", 
-            ">>> The ACL Simulator v4.0.0 - The Ultimate Access Control List Training Platform \n" +
+            ">>> The ACL Simulator v4.4 - The Ultimate Access Control List Training Platform \n" +
             ">>> Developed by Fatih.\n",
             " \n",
             " \n"
