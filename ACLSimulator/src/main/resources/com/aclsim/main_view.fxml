@@ -12,7 +12,7 @@
     <top>
         <VBox spacing="10" styleClass="header-section">
             <padding><Insets top="15" right="15" bottom="15" left="15"/></padding>
-            <Label text="ACL Simulator Dashboard" style="-fx-font-size: 24px; -fx-font-weight: bold; -fx-text-fill: #f1f5f9;"/>
+            <Label text="ACL Simulator" style="-fx-font-size: 24px; -fx-font-weight: bold; -fx-text-fill: #f1f5f9;"/>
             <HBox spacing="8" alignment="CENTER_LEFT">
                 
                 <!-- Group 1: CRUD Operations -->

@@ -1,23 +1,26 @@
 /* --- 4.1.1: JAVAFX-COMPLIANT CSS LOOKUPS (VARIABLES) --- */
 .root {
-    -fx-bg-dark: #1e293b;            
-    -fx-bg-card: #243247;            
-    -fx-bg-header: #151d2a;          
-    -fx-border-color-slate: #3b4b61; 
+    /* Softened Slate-Blue Palette */
+    -fx-bg-dark: #1e293b;            /* Soft slate background */
+    -fx-bg-card: #243247;            /* Lighter slate-blue for cards and panels */
+    -fx-bg-header: #151d2a;          /* Rich deep slate for headers */
+    -fx-border-color-slate: #3b4b61; /* Steel-blue theme borders */
     
-    -fx-accent-teal: #06b6d4;        
-    -fx-neon-green: #10b981;         
-    -fx-neon-red: #ef4444;           
-    -fx-neon-amber: #f59e0b;         
+    -fx-accent-teal: #06b6d4;        /* Vibrant neon-teal */
+    -fx-neon-green: #10b981;         /* Permit green */
+    -fx-neon-red: #ef4444;           /* Deny red */
+    -fx-neon-amber: #f59e0b;         /* Warning yellow */
     
-    -fx-text-primary: #f1f5f9;       
-    -fx-text-secondary: #94a3b8;     
+    -fx-text-primary: #f1f5f9;       /* Soft white text */
+    -fx-text-secondary: #94a3b8;     /* Warm muted gray text */
 
-    -fx-font-family: "Segoe UI", Helvetica, Arial, sans-serif;
+    /* Global Monospace Font Stack for strict data alignment */
+    -fx-font-family: "JetBrains Mono", "Consolas", "Menlo", "Monaco", "Courier New", monospace;
     -fx-background-color: -fx-bg-dark;
 }
 
-/* --- CARDS & GLASSMORPHIC DEPTH --- */
+/* --- 4.1.2: CARDS & GLASSMORPHIC DEPTH --- */
+
 .header-section {
     -fx-background-color: -fx-bg-header;
     -fx-border-color: -fx-border-color-slate;
@@ -30,6 +33,7 @@
     -fx-border-width: 1 0 0 0;
 }
 
+/* Academy Sidebar (Panel Card) */
 #academyPane {
     -fx-background-color: -fx-bg-card;
     -fx-border-color: -fx-border-color-slate;
@@ -42,7 +46,8 @@
     -fx-text-fill: -fx-text-primary !important;
 }
 
-/* --- TABLE VIEW OVERHAUL (CENTERED & GRIDDED) --- */
+/* --- TABLE VIEW OVERHAUL (THEMED VERTICAL GRID LINES) --- */
+
 .table-view {
     -fx-background-color: -fx-bg-card;
     -fx-border-color: -fx-border-color-slate;
@@ -51,10 +56,12 @@
     -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.1), 8, 0, 0, 2);
 }
 
+/* Header strip background */
 .table-view .column-header-background {
     -fx-background-color: -fx-bg-header;
 }
 
+/* Table column headers */
 .table-view .column-header {
     -fx-background-color: -fx-bg-header;
     -fx-size: 38;
@@ -62,6 +69,7 @@
     -fx-border-width: 0 1 1 0;
 }
 
+/* Centered Header Column Labels */
 .table-view .column-header .label {
     -fx-text-fill: -fx-text-secondary;
     -fx-font-weight: bold;
@@ -70,6 +78,7 @@
     -fx-max-width: infinity;
 }
 
+/* Fills the empty corner space at the end of the header row */
 .table-view .column-header-background .filler,
 .table-view .corner {
     -fx-background-color: -fx-bg-header;
@@ -77,6 +86,7 @@
     -fx-border-width: 0 0 1 0;
 }
 
+/* Table cells vertical grid lines and centered alignments */
 .table-cell {
     -fx-font-family: "JetBrains Mono", "Consolas", "Menlo", "Monaco", "Courier New", monospace;
     -fx-text-fill: -fx-text-primary;
@@ -84,38 +94,49 @@
     -fx-border-color: transparent -fx-border-color-slate transparent transparent; 
     -fx-border-width: 0 1 0 0;
     -fx-padding: 0 10 0 10;
-    -fx-alignment: CENTER;
+    -fx-alignment: CENTER; /* Center cell entries */
 }
 
+/* Table Rows horizontal lines */
 .table-row-cell {
     -fx-background-color: -fx-bg-card;
     -fx-cell-size: 34;
     -fx-border-color: -fx-border-color-slate;
-    -fx-border-width: 0 0 1 0;
+    -fx-border-width: 0 0 1 0; 
 }
 
+/* Alternating Row Zebra Striping */
 .table-row-cell:odd {
     -fx-background-color: #2a3a52; 
 }
 
+/* --- 4.4.2 MICRO-INTERACTION: DYNAMIC HOVER ROW GLOW --- */
+.table-row-cell:hover {
+    -fx-background-color: #31445f !important; /* Soft highlights on hover */
+    -fx-cursor: hand;
+}
+
+/* Selected Row Style */
 .table-view .table-row-cell:selected {
     -fx-background-color: rgba(6, 182, 212, 0.2) !important;
     -fx-border-color: -fx-accent-teal !important;
     -fx-border-width: 1px 0 1px 0 !important;
 }
 
+/* Selected text highlighted with teal */
 .table-view .table-row-cell:selected .table-cell {
     -fx-text-fill: -fx-accent-teal !important;
     -fx-font-weight: bold;
-    -fx-border-color: transparent -fx-border-color-slate transparent transparent;
+    -fx-border-color: transparent -fx-border-color-slate transparent transparent; 
 }
 
+/* Empty Table state placeholder */
 .table-view .placeholder .label {
     -fx-text-fill: -fx-text-secondary;
     -fx-font-size: 13px;
 }
 
-/* --- COMBO BOX THEME OVERHAUL (4.1/4.2 Polish) --- */
+/* --- COMBO BOX THEME OVERHAUL --- */
 .combo-box {
     -fx-background-color: -fx-bg-card;
     -fx-border-color: -fx-border-color-slate;
@@ -153,7 +174,7 @@
 /* Dropdown list items */
 .combo-box-popup .list-cell {
     -fx-background-color: -fx-bg-header;
-    -fx-text-fill: -fx-text-primary; /* Clean white level names */
+    -fx-text-fill: -fx-text-primary; 
     -fx-padding: 8 12 8 12;
     -fx-font-size: 12px;
     -fx-font-weight: bold;
@@ -170,7 +191,7 @@
     -fx-text-fill: -fx-accent-teal !important;
 }
 
-/* --- BUTTONS --- */
+/* --- 4.4.2 MICRO-INTERACTION: DYNAMIC HOVER BUTTONS --- */
 .button, .toggle-button {
     -fx-cursor: hand;
     -fx-background-radius: 6;
@@ -181,25 +202,65 @@
     -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.15), 4, 0, 0, 1);
 }
 
+/* Hover Scaling */
 .button:hover, .toggle-button:hover {
-    -fx-opacity: 0.90;
-    -fx-scale-x: 1.02;
-    -fx-scale-y: 1.02;
+    -fx-opacity: 0.95;
+    -fx-scale-x: 1.03; /* Micro-grow */
+    -fx-scale-y: 1.03;
 }
 
-.btn-primary { -fx-background-color: #1e40af; }
-.btn-secondary { -fx-background-color: #334155; }
-.btn-danger { -fx-background-color: #991b1b; }
-.btn-success { -fx-background-color: #065f46; }
+/* Tactile Click Scaling */
+.button:pressed, .toggle-button:pressed {
+    -fx-scale-x: 0.97; /* Micro-shrink */
+    -fx-scale-y: 0.97;
+}
 
+/* Specialized Context Colors & Glows */
+.btn-primary { 
+    -fx-background-color: #1e40af; /* Serious Blue */
+}
+.btn-primary:hover {
+    -fx-background-color: #2563eb;
+    -fx-effect: dropshadow(three-pass-box, rgba(37, 99, 235, 0.4), 8, 0, 0, 1);
+}
+
+.btn-secondary { 
+    -fx-background-color: #334155; /* Serious Slate */
+}
+.btn-secondary:hover {
+    -fx-background-color: #475569;
+    -fx-effect: dropshadow(three-pass-box, rgba(71, 85, 105, 0.4), 8, 0, 0, 1);
+}
+
+.btn-danger { 
+    -fx-background-color: #991b1b; /* Serious Dark Red */
+}
+.btn-danger:hover {
+    -fx-background-color: #dc2626;
+    -fx-effect: dropshadow(three-pass-box, rgba(220, 38, 38, 0.4), 8, 0, 0, 1);
+}
+
+.btn-success { 
+    -fx-background-color: #065f46; /* Serious Dark Green */
+}
+.btn-success:hover {
+    -fx-background-color: #059669;
+    -fx-effect: dropshadow(three-pass-box, rgba(5, 150, 105, 0.4), 8, 0, 0, 1);
+}
+
+/* Toggle-Button matching */
 .toggle-button { -fx-background-color: #334155; }
+.toggle-button:hover {
+    -fx-background-color: #475569;
+}
 .toggle-button:selected {
     -fx-background-color: #0e7490;
     -fx-border-color: -fx-accent-teal;
     -fx-border-width: 1px;
+    -fx-effect: dropshadow(three-pass-box, rgba(14, 116, 144, 0.4), 8, 0, 0, 1);
 }
 
-/* --- COMPONENTS --- */
+/* --- COMPONENTS & VALIDATION --- */
 .text-field {
     -fx-font-family: "JetBrains Mono", "Consolas", "Menlo", "Monaco", "Courier New", monospace;
     -fx-background-color: -fx-bg-card;
@@ -219,6 +280,7 @@
     -fx-text-fill: -fx-text-primary;
 }
 
+/* Terminal Console Style */
 #lblResult {
     -fx-font-family: "Consolas", "Monospaced", monospace;
     -fx-font-size: 20px;
@@ -233,9 +295,15 @@
     -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.4), 8, 0, 0, 3);
 }
 
-.dialog-pane { -fx-background-color: -fx-bg-card; }
-.dialog-pane .label { -fx-text-fill: -fx-text-primary; }
+/* Dialog Box Overrides */
+.dialog-pane {
+    -fx-background-color: -fx-bg-card;
+}
+.dialog-pane .label {
+    -fx-text-fill: -fx-text-primary;
+}
 
+/* Interactive Validation (4.4.2: Dynamic Shadows) */
 .field-error {
     -fx-border-color: -fx-neon-red !important;
     -fx-border-width: 2px !important;

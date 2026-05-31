@@ -33,7 +33,7 @@ public class MainApp extends Application {
             String cssPath = getClass().getResource("/com/aclsim/style.css").toExternalForm();
             mainScene.getStylesheets().add(cssPath);
 
-            primaryStage.setTitle("ACL Simulator Dashboard");
+            primaryStage.setTitle("ACL Simulator v4");
             primaryStage.setScene(mainScene);
             primaryStage.setMinWidth(1100);
             primaryStage.setMinHeight(750);
@@ -93,13 +93,13 @@ public class MainApp extends Application {
 
         // Expanded Height Terminal Label to fit ASCII Art safely
         Label lblTerminal = new Label("booting sentinel_os...\n");
-        lblTerminal.setPrefHeight(360); 
+        lblTerminal.setPrefHeight(300); 
         lblTerminal.setPrefWidth(840);
         lblTerminal.setWrapText(true);
         lblTerminal.setStyle("-fx-font-family: 'JetBrains Mono', 'Consolas', 'Monospaced', monospace; -fx-font-size: 11px; -fx-text-fill: #06b6d4; -fx-alignment: top-left;");
 
         splashLayout.getChildren().addAll(logoView, lblTerminal);
-        Scene splashScene = new Scene(splashLayout, 720, 600, Color.TRANSPARENT); // Made taller for ASCII design
+        Scene splashScene = new Scene(splashLayout, 720, 500, Color.TRANSPARENT); // Made taller for ASCII design
         splashStage.setScene(splashScene);
 
         // --- ANIMATIONS ---

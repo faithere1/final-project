@@ -604,7 +604,7 @@ public class MainController {
         if (ruleList.isEmpty()) return;
         String config = ciscoService.generateConfig(ruleList);
         TextArea area = new TextArea(config);
-        area.setEditable(false); area.setStyle("-fx-font-family: 'Monospaced';");
+        area.setEditable(false); area.setPrefSize(500, 250); area.setStyle("-fx-font-family: 'Monospaced';");
         Alert alert = new Alert(Alert.AlertType.INFORMATION);
         alert.getDialogPane().setContent(area);
         alert.showAndWait();
