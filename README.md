@@ -5,19 +5,7 @@ network Access Control Lists. It combines a rule table, packet simulator,
 visual topology animation, Cisco IOS config generation, batch testing, history
 logging, and an Academy mode with auto-graded lab scenarios.
 
-![ACL Simulator main screen](image.png)
-
-## Current Release
-
-**v5.0.0 - The Distribution & Documentation Update**
-
-This release turns the capstone prototype into a shareable project package:
-
-- GitHub-ready README and documentation set.
-- Codebase atlas for packages, classes, and public responsibilities.
-- Troubleshooting notes for known build, JavaFX, SQLite, and UI issues.
-- Maven release build configuration for a runnable application JAR.
-- Cross-platform launcher scripts for macOS/Linux and Windows.
+![ACL Simulator main screen](image-5.png)
 
 ## Feature Highlights
 
@@ -39,11 +27,7 @@ This release turns the capstone prototype into a shareable project package:
 
 ![Lab completion report](image-2.png)
 
-![Splash screen](image-4.png)
-
-![Updated dashboard](image-3.png)
-
-![Brand update](image-5.png)
+![Splash screen](image-3.png)
 
 ## Architecture
 
@@ -134,18 +118,3 @@ run.bat
 - [Codebase atlas](ACLSimulator/CODEBASE.md)
 - [Troubleshooting guide](ACLSimulator/TROUBLESHOOTING.md)
 - [v5.0 roadmap](v5.0%20plan.md)
-
-## Release Package
-
-The intended v5.0 distribution folder is:
-
-```text
-ACLSimulator_v5.0/
-├── ACLSimulator.jar
-├── run.sh
-├── run.bat
-└── README.md
-```
-
-The final instructor submission should include the source code, built JAR,
-documentation files, screenshots, and the v5.0 release archive.
