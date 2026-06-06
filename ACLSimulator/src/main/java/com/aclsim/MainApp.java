@@ -32,6 +32,7 @@ public class MainApp extends Application {
             Scene mainScene = new Scene(root);
             String cssPath = getClass().getResource("/com/aclsim/style.css").toExternalForm();
             mainScene.getStylesheets().add(cssPath);
+            
 
             primaryStage.setTitle("ACL Simulator v4.4");
             primaryStage.setScene(mainScene);
@@ -128,13 +129,13 @@ public class MainApp extends Application {
             " \n",
             " \n",
             " \n",
-            "ALL FUNCTIONS CHECKED \n",
+            " \n",
             "READY TO START \n",
             " \n",
             " \n",
             " \n", 
             ">>> The ACL Simulator v4.4 - The Ultimate Access Control List Training Platform \n" +
-            ">>> Developed by Fatih.\n",
+            ">>> Developed by vibe coding.\n",
             " \n",
             " \n"
         };
