@@ -5,7 +5,7 @@ network Access Control Lists. It combines a rule table, packet simulator,
 visual topology animation, Cisco IOS config generation, batch testing, history
 logging, and an Academy mode with auto-graded lab scenarios.
 
-![ACL Simulator main screen](image-5.png)
+![ACL Simulator main screen](images/image-5.png)
 
 ## Feature Highlights
 
@@ -23,11 +23,11 @@ logging, and an Academy mode with auto-graded lab scenarios.
 
 ## Screenshots
 
-![Academy mode](image-1.png)
+![Academy mode](images/image-1.png)
 
-![Lab completion report](image-2.png)
+![Lab completion report](images/image-2.png)
 
-![Splash screen](image-3.png)
+![Splash screen](images/image-3.png)
 
 ## Architecture
 
@@ -117,4 +117,7 @@ run.bat
 - [Development process](ACLSimulator/DEVELOPMENT.md)
 - [Codebase atlas](ACLSimulator/CODEBASE.md)
 - [Troubleshooting guide](ACLSimulator/TROUBLESHOOTING.md)
-- [v5.0 roadmap](v5.0%20plan.md)
+- [v5.0 roadmap](plans/v5.0 plan.md)
+- [v4.0 roadmap] (vplans/v4.0 plan.md)
+- [v3.0 roadmap] (plans/v3.0 plan.md)
+- [v2.0 roadmap] (plans/v2.0 plan.md)
